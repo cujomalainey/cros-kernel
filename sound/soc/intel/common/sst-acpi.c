@@ -180,7 +180,7 @@ static int sst_acpi_remove(struct platform_device *pdev)
 }
 
 static struct sst_acpi_mach haswell_machines[] = {
-	{ "INT33CA", "haswell-audio", "intel/IntcSST1.bin", NULL, NULL, NULL },
+	{ "INT33CA", "haswell-audio", "intel/reef-hsw.ri", NULL, NULL, NULL },
 	{}
 };
 
@@ -198,8 +198,9 @@ static struct sst_acpi_desc sst_acpi_haswell_desc = {
 };
 
 static struct sst_acpi_mach broadwell_machines[] = {
-	{ "INT343A", "broadwell-audio", "intel/IntcSST2.bin", NULL, NULL, NULL },
-	{ "RT5677CE", "bdw-rt5677", "intel/IntcSST2.bin", NULL, NULL, NULL },
+	{ "INT33CA", "broadwell-audio", "intel/reef-bdw.ri", NULL, NULL, NULL },
+	{ "INT343A", "broadwell-audio", "intel/reef-bdw.ri", NULL, NULL, NULL },
+	{ "RT5677CE", "bdw-rt5677", "intel/reef-bdw.ri", NULL, NULL, NULL },
 	{}
 };
 
@@ -218,13 +219,14 @@ static struct sst_acpi_desc sst_acpi_broadwell_desc = {
 
 #if !IS_ENABLED(CONFIG_SND_SST_IPC_ACPI)
 static struct sst_acpi_mach baytrail_machines[] = {
-	{ "10EC5640", "byt-rt5640", "intel/fw_sst_0f28.bin-48kHz_i2s_master", NULL, NULL, NULL },
-	{ "193C9890", "byt-max98090", "intel/fw_sst_0f28.bin-48kHz_i2s_master", NULL, NULL, NULL },
+	{ "10EC5640", "byt-rt5640", "intel/reef-byt.ri" },
+	{ "10EC5651", "byt-rt5651", "intel/reef-byt.ri" },
+	{ "193C9890", "byt-max98090", "intel/fw_sst_0f28.bin-48kHz_i2s_master" },
 	{}
 };
 
 static struct sst_acpi_desc sst_acpi_baytrail_desc = {
-	.drv_name = "baytrail-pcm-audio",
+	.drv_name = "haswell-pcm-audio",
 	.machines = baytrail_machines,
 	.resindex_lpe_base = 0,
 	.resindex_pcicfg_base = 1,
