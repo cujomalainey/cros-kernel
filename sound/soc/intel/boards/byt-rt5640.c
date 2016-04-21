@@ -24,6 +24,7 @@
 #include <sound/soc.h>
 #include <sound/jack.h>
 #include "../../codecs/rt5640.h"
+#include "../haswell/sst-haswell-ipc.h"
 
 #include "../common/sst-dsp.h"
 
@@ -43,6 +44,10 @@ static const struct snd_soc_dapm_route byt_rt5640_audio_map[] = {
 	{"Speaker", NULL, "SPOLN"},
 	{"Speaker", NULL, "SPORP"},
 	{"Speaker", NULL, "SPORN"},
+
+	/* CODEC BE connections */
+	{"SSP2 CODEC IN", NULL, "AIF1 Capture"},
+	{"AIF1 Playback", NULL, "SSP2 CODEC OUT"},
 };
 
 static const struct snd_soc_dapm_route byt_rt5640_intmic_dmic1_map[] = {
@@ -84,16 +89,18 @@ static int byt_rt5640_hw_params(struct snd_pcm_substream *substream,
 	struct snd_soc_dai *codec_dai = rtd->codec_dai;
 	int ret;
 
+	snd_soc_dai_set_bclk_ratio(codec_dai, 32);
+
 	ret = snd_soc_dai_set_sysclk(codec_dai, RT5640_SCLK_S_PLL1,
-				     params_rate(params) * 256,
+				     params_rate(params) * 256 * 2,
 				     SND_SOC_CLOCK_IN);
 	if (ret < 0) {
 		dev_err(codec_dai->dev, "can't set codec clock %d\n", ret);
 		return ret;
 	}
 	ret = snd_soc_dai_set_pll(codec_dai, 0, RT5640_PLL1_S_BCLK1,
-				  params_rate(params) * 64,
-				  params_rate(params) * 256);
+				  params_rate(params) * 32,
+				  params_rate(params) * 256 * 2);
 	if (ret < 0) {
 		dev_err(codec_dai->dev, "can't set codec pll: %d\n", ret);
 		return ret;
@@ -128,13 +135,31 @@ static const struct dmi_system_id byt_rt5640_quirk_table[] = {
 	{}
 };
 
+static int byt_codec_fixup(struct snd_soc_pcm_runtime *rtd,
+			    struct snd_pcm_hw_params *params)
+{
+	struct snd_interval *rate = hw_param_interval(params,
+			SNDRV_PCM_HW_PARAM_RATE);
+	struct snd_interval *channels = hw_param_interval(params,
+						SNDRV_PCM_HW_PARAM_CHANNELS);
+
+	/* The DSP will covert the FE rate to 48k, stereo, 16bits */
+	rate->min = rate->max = 48000;
+	channels->min = channels->max = 2;
+
+	/* set SSP2 to 16-bit */
+	params_set_format(params, SNDRV_PCM_FORMAT_S16_LE);
+	return 0;
+}
+
 static int byt_rt5640_init(struct snd_soc_pcm_runtime *runtime)
 {
-	int ret;
-	struct snd_soc_codec *codec = runtime->codec;
+	struct sst_pdata *pdata = dev_get_platdata(runtime->platform->dev);
+	struct sst_hsw *dsp = pdata->dsp;
+	//struct snd_soc_codec *codec = runtime->codec;
 	struct snd_soc_card *card = runtime->card;
 	const struct snd_soc_dapm_route *custom_map;
-	int num_routes;
+	int num_routes, ret;
 
 	card->dapm.idle_bias_off = true;
 
@@ -161,19 +186,28 @@ static int byt_rt5640_init(struct snd_soc_pcm_runtime *runtime)
 	}
 
 	ret = snd_soc_dapm_add_routes(&card->dapm, custom_map, num_routes);
-	if (ret)
-		return ret;
-
+	//if (ret)
+	//	return ret;
+#if 0
 	if (byt_rt5640_quirk & BYT_RT5640_DMIC_EN) {
 		ret = rt5640_dmic_enable(codec, 0, 0);
 		if (ret)
 			return ret;
 	}
-
+#endif
 	snd_soc_dapm_ignore_suspend(&card->dapm, "Headphone");
 	snd_soc_dapm_ignore_suspend(&card->dapm, "Speaker");
 
-	return ret;
+	/* Set ADSP SSP port settings */
+	ret = sst_hsw_device_set_config(dsp, SST_HSW_DEVICE_SSP_2,
+		15360000,
+		SST_HSW_DEVICE_CLOCK_MASTER, 9);
+	if (ret < 0) {
+		dev_err(runtime->dev, "error: failed to set device config\n");
+		return ret;
+	}
+
+	return 0;
 }
 
 static struct snd_soc_ops byt_rt5640_ops = {
@@ -182,15 +216,38 @@ static struct snd_soc_ops byt_rt5640_ops = {
 
 static struct snd_soc_dai_link byt_rt5640_dais[] = {
 	{
-		.name = "Baytrail Audio",
-		.stream_name = "Audio",
-		.cpu_dai_name = "baytrail-pcm-audio",
+		.name = "System PCM",
+		.stream_name = "System",
+		.cpu_dai_name = "haswell-pcm-audio",
+		.platform_name = "haswell-pcm-audio",
+		.dynamic = 1,
+		.codec_name = "snd-soc-dummy",
+		.codec_dai_name = "snd-soc-dummy-dai",
+		.init = byt_rt5640_init,
+		.trigger = {SND_SOC_DPCM_TRIGGER_POST, SND_SOC_DPCM_TRIGGER_POST},
+		.dpcm_playback = 1,
+		.dpcm_capture = 1,
+	},
+	/* Back End DAI links */
+	{
+		.name = "SSP2-Codec",
+		.be_id = 1,
+		.cpu_dai_name = "snd-soc-dummy-dai",
+		.platform_name = "snd-soc-dummy",
+		.no_pcm = 1,
+#if 1
 		.codec_dai_name = "rt5640-aif1",
 		.codec_name = "i2c-10EC5640:00",
-		.platform_name = "baytrail-pcm-audio",
-		.dai_fmt = SND_SOC_DAIFMT_I2S | SND_SOC_DAIFMT_NB_NF |
-			   SND_SOC_DAIFMT_CBS_CFS,
-		.init = byt_rt5640_init,
+#else
+		.codec_dai_name = "snd-soc-dummy-dai",
+		.codec_name = "snd-soc-dummy",
+#endif
+		.dai_fmt = SND_SOC_DAIFMT_DSP_B | SND_SOC_DAIFMT_NB_NF
+						| SND_SOC_DAIFMT_CBS_CFS,
+		.be_hw_params_fixup = byt_codec_fixup,
+		.ignore_suspend = 1,
+		.dpcm_playback = 1,
+		.dpcm_capture = 1,
 		.ops = &byt_rt5640_ops,
 	},
 };
