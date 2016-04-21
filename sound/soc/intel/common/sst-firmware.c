@@ -314,7 +314,7 @@ int sst_dma_new(struct sst_dsp *sst)
 	}
 
 	sst->dma = dma;
-	sst->fw_use_dma = true;
+	sst->fw_use_dma = false;
 	return 0;
 
 err_dma_dev:
