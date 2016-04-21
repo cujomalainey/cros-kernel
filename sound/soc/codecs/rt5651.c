@@ -1786,8 +1786,6 @@ static int rt5651_i2c_probe(struct i2c_client *i2c,
 
 	if (pdata)
 		rt5651->pdata = *pdata;
-	else if (i2c->dev.of_node)
-		rt5651_parse_dt(rt5651, i2c->dev.of_node);
 
 	rt5651->regmap = devm_regmap_init_i2c(i2c, &rt5651_regmap);
 	if (IS_ERR(rt5651->regmap)) {
