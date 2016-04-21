@@ -274,7 +274,9 @@ int sst_dsp_dma_copyto(struct sst_dsp *sst, dma_addr_t dest_addr,
 
 /* Msg IO */
 void sst_dsp_ipc_msg_tx(struct sst_dsp *dsp, u32 msg);
+void sst_dsp_ipc_msg64_tx(struct sst_dsp *dsp, u64 msg);
 u32 sst_dsp_ipc_msg_rx(struct sst_dsp *dsp);
+u64 sst_dsp_ipc_msg64_rx(struct sst_dsp *dsp);
 
 /* Mailbox management */
 int sst_dsp_mailbox_init(struct sst_dsp *dsp, u32 inbox_offset,

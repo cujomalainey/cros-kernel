@@ -346,6 +346,13 @@ void sst_dsp_ipc_msg_tx(struct sst_dsp *dsp, u32 msg)
 }
 EXPORT_SYMBOL_GPL(sst_dsp_ipc_msg_tx);
 
+void sst_dsp_ipc_msg64_tx(struct sst_dsp *dsp, u64 msg)
+{
+	sst_dsp_shim_write64_unlocked(dsp, SST_IPCX, msg | SST_BYT_IPCX_BUSY);
+	trace_sst_ipc_msg_tx(msg);
+}
+EXPORT_SYMBOL_GPL(sst_dsp_ipc_msg64_tx);
+
 u32 sst_dsp_ipc_msg_rx(struct sst_dsp *dsp)
 {
 	u32 msg;
@@ -356,6 +363,17 @@ u32 sst_dsp_ipc_msg_rx(struct sst_dsp *dsp)
 	return msg;
 }
 EXPORT_SYMBOL_GPL(sst_dsp_ipc_msg_rx);
+
+u64 sst_dsp_ipc_msg64_rx(struct sst_dsp *dsp)
+{
+	u64 msg;
+
+	msg = sst_dsp_shim_read64_unlocked(dsp, SST_IPCX);
+	trace_sst_ipc_msg_rx(msg);
+
+	return msg;
+}
+EXPORT_SYMBOL_GPL(sst_dsp_ipc_msg64_rx);
 
 int sst_dsp_mailbox_init(struct sst_dsp *sst, u32 inbox_offset, size_t inbox_size,
 	u32 outbox_offset, size_t outbox_size)
