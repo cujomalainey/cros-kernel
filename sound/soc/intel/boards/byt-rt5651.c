@@ -36,12 +36,16 @@ static const struct snd_soc_dapm_widget byt_rt5651_widgets[] = {
 };
 
 static const struct snd_soc_dapm_route byt_rt5651_audio_map[] = {
-	{"Headset Mic", NULL, "micbias1"},
-	{"IN2P", NULL, "Headset Mic"},
+	{"micbias1", NULL, "Headset Mic"},
+	{"IN3P", NULL, "micbias1"},
 	{"Headphone", NULL, "HPOL"},
 	{"Headphone", NULL, "HPOR"},
 	{"Speaker", NULL, "LOUTL"},
 	{"Speaker", NULL, "LOUTR"},
+
+	/* CODEC BE connections */
+	{"SSP CODEC IN", NULL, "AIF1 Capture"},
+	{"AIF1 Playback", NULL, "SSP CODEC OUT"},
 };
 
 static const struct snd_soc_dapm_route byt_rt5651_intmic_dmic1_map[] = {
@@ -212,12 +216,12 @@ static struct snd_soc_ops byt_rt5651_ops = {
 };
 
 
-#if 0
+#if 1
 static struct snd_soc_dai_link byt_rt5651_dais[] = {
 	{
-		.name = "System PCM",
+		.name = "PCM0",
 		.stream_name = "System Playback/Capture",
-		.cpu_dai_name = "System Pin",
+		.cpu_dai_name = "PCM0 Pin",
 		.platform_name = "haswell-pcm-audio",
 		.dynamic = 1,
 		.codec_name = "snd-soc-dummy",
@@ -226,6 +230,17 @@ static struct snd_soc_dai_link byt_rt5651_dais[] = {
 		.trigger = {SND_SOC_DPCM_TRIGGER_POST, SND_SOC_DPCM_TRIGGER_POST},
 		.dpcm_playback = 1,
 		.dpcm_capture = 1,
+	},
+	{
+		.name = "PCM1",
+		.stream_name = "PCM1 Playback",
+		.cpu_dai_name = "PCM1 Pin",
+		.platform_name = "haswell-pcm-audio",
+		.dynamic = 1,
+		.codec_name = "snd-soc-dummy",
+		.codec_dai_name = "snd-soc-dummy-dai",
+		.trigger = {SND_SOC_DPCM_TRIGGER_POST, SND_SOC_DPCM_TRIGGER_POST},
+		.dpcm_playback = 1,
 	},
 	/* Back End DAI links */
 	{
@@ -237,14 +252,11 @@ static struct snd_soc_dai_link byt_rt5651_dais[] = {
 		.no_pcm = 1,
 		.codec_dai_name = "rt5651-aif1",
 		.codec_name = "i2c-10EC5651:00",
-//		.codec_dai_name = "snd-soc-dummy-dai",
-//		.codec_name = "snd-soc-dummy",
 		.ops = &byt_rt5651_ops,
-		.dai_fmt = SND_SOC_DAIFMT_I2S | SND_SOC_DAIFMT_NB_NF |
+		.dai_fmt = SND_SOC_DAIFMT_DSP_B | SND_SOC_DAIFMT_NB_NF |
 			SND_SOC_DAIFMT_CBS_CFS,
 		.ignore_suspend = 1,
-		.ignore_pmdown_time = 1,
-//		.be_hw_params_fixup = broadwell_ssp0_fixup,
+		.be_hw_params_fixup = byt_codec_fixup,
 		.dpcm_playback = 1,
 		.dpcm_capture = 1,
 	},
