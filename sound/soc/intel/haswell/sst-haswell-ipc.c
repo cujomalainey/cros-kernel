@@ -460,7 +460,7 @@ static ssize_t sst_dfsentry_read(struct file *file, char __user *buffer,
 	loff_t pos = *ppos;
 	size_t ret;
 
-	dev_dbg(dfse->sst->dev, "pbuf: %p, *ppos: 0x%llx\n", buffer, *ppos);
+	//dev_dbg(dfse->sst->dev, "pbuf: %p, *ppos: 0x%llx\n", buffer, *ppos);
 
 	size = dfse->size;
 
@@ -488,7 +488,7 @@ static ssize_t sst_dfsentry_read(struct file *file, char __user *buffer,
 	count -= ret;
 	*ppos = pos + count;
 
-	dev_dbg(dfse->sst->dev, "*ppos: 0x%llx, count: %zu\n", *ppos, count);
+	//dev_dbg(dfse->sst->dev, "*ppos: 0x%llx, count: %zu\n", *ppos, count);
 
 	return count;
 }
@@ -499,7 +499,8 @@ static const struct file_operations sst_dfs_fops = {
 	.llseek = default_llseek,
 };
 
-static int hsw_debugfs_entry_create(struct sst_dsp *sst, void __iomem *base, size_t size, char *name)
+static int hsw_debugfs_entry_create(struct sst_dsp *sst, void __iomem *base,
+	size_t size, const char *name)
 {
 	struct sst_dfsentry *dfse;
 
@@ -526,30 +527,50 @@ static int hsw_debugfs_entry_create(struct sst_dsp *sst, void __iomem *base, siz
 	return 0;
 }
 
+struct sst_debugfs_map {
+	const char *name;
+	u32 offset;
+	u32 size;
+};
+
+static const struct sst_debugfs_map debugfs_byt[] = {
+	{"dmac0", 0x98000, 0x420},
+	{"dmac1", 0x9c000, 0x420},
+	{"ssp0", 0xa0000, 0x100},
+	{"ssp1", 0xa1000, 0x100},
+	{"ssp2", 0xa2000, 0x100},
+	{"iram", 0xc0000, 80 * 1024},
+	{"dram", 0x100000, 160 * 1024},
+	{"shim", 0x140000, 0x100},
+	{"mbox", 0x144000, 0x1000},
+};
+
+static const struct sst_debugfs_map debugfs_bdw[] = {
+	{"dmac0", 0x98000, 0x420},
+	{"dmac1", 0x9c000, 0x420},
+	{"ssp0", 0xa0000, 0x100},
+	{"ssp1", 0xa1000, 0x100},
+	{"ssp2", 0xa2000, 0x100},
+	{"iram", 0xc0000, 80 * 1024},
+	{"dram", 0x100000, 160 * 1024},
+	{"shim", 0x140000, 0x100},
+	{"mbox", 0x144000, 0x1000},
+};
+
+
 static int hsw_debugfs_init(struct sst_dsp *sst)
 {
-	int ret = 0;
+	int err = 0, i;
 
-	ret = hsw_debugfs_entry_create(sst, sst->mailbox.in_base, 4096, "mbox");
-	if (ret < 0)
-		return ret;
+	for (i = 0; i < ARRAY_SIZE(debugfs_byt); i++) {
+		err = hsw_debugfs_entry_create(sst,
+			(void __iomem *)((char *)sst->addr.lpe + debugfs_byt[i].offset),
+			debugfs_byt[i].size, debugfs_byt[i].name);
+		if (err < 0)
+			dev_err(sst->dev, "cannot create debugfs for %s\n", debugfs_byt[i].name);
+	}
 
-	ret = hsw_debugfs_entry_create(sst, sst->addr.shim, 256, "shim");
-	if (ret < 0)
-		return ret;
-
-	ret = hsw_debugfs_entry_create(sst,
-		(void __iomem *)((char *)sst->addr.lpe + 0xa2000), 0x90,
-		"ssp2");
-	if (ret < 0)
-		return ret;
-
-	ret = hsw_debugfs_entry_create(sst,
-		(void __iomem *)((char *)sst->addr.lpe + 0x9c000), 0x400,
-		"dmac1");
-
-	return ret;
-
+	return err;
 }
 
 
@@ -2273,6 +2294,7 @@ static void hsw_shim_dbg(struct sst_generic_ipc *ipc, const char *text)
 {
 	struct sst_dsp *sst = ipc->dsp;
 	u32 ipcd, ipcx ,isrd, imrx, isrx, imrd;
+	int i;
 
 	ipcx = sst_dsp_shim_read_unlocked(sst, SST_IPCX);
 	ipcd = sst_dsp_shim_read_unlocked(sst, SST_IPCD);
@@ -2286,6 +2308,32 @@ static void hsw_shim_dbg(struct sst_generic_ipc *ipc, const char *text)
 		" imrx 0x%8x\n imrd 0x%8x\n"
 		" isrx 0x%8x\n isrd 0x%8x\n",
 		text, ipcx, ipcd, imrx, imrd, isrx, isrd);
+
+	for (i = 0; i < 0xff; i+=8 ) {
+		dev_err(ipc->dev, "shim 0x%2.2x value 0x%16.16llx\n",i, 
+			sst_dsp_shim_read64_unlocked(sst, i));
+	}
+
+	for (i = 0xa0000; i < 0xa0100; i+=4) {
+		dev_err(sst->dev, "iram: 0x%x value 0x%8.8x\n", i - 0xa0000,
+			readl(sst->addr.lpe + i));
+	}
+
+	for (i = 0x0; i < 0x100; i+=4) {
+		dev_err(sst->dev, "dram: 0x%x value 0x%8.8x\n", i,
+			readl(sst->addr.lpe + i));
+	}
+
+	for (i = 0x00; i < 0xff; i+=4) {
+		dev_err(sst->dev, "pci: 0x%x value 0x%8.8x\n", i,
+			readl(sst->addr.pci_cfg + i));
+	}
+
+	//TODO: need correct mailbox offset
+	for (i = 0; i < 30; i++) {
+		dev_err(sst->dev, "mbox: 0x%x value 0x%8.8x\n", i,
+			readl(sst->addr.lpe + i * 4 + 0x9e000));
+	}
 }
 
 static void byt_shim_dbg(struct sst_generic_ipc *ipc, const char *text)
