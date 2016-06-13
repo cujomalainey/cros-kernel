@@ -128,7 +128,9 @@ enum ipc_glb_type {
 	IPC_GLB_DEBUG_LOG_MESSAGE = 14,		/* Message to or from the debug logger. */
 	IPC_GLB_MODULE_OPERATION = 15,		/* Message to loadable fw module */
 	IPC_GLB_REQUEST_TRANSFER = 16, 		/* < Request Transfer for host */
-	IPC_GLB_MAX_IPC_MESSAGE_TYPE = 17,	/* Maximum message number */
+	IPC_GLB_ENABLE_LOOPBACK = 17, 	/* Set device format */
+	IPC_GLB_DISABLE_LOOPBACK = 18,	/* Get device format */
+	IPC_GLB_MAX_IPC_MESSAGE_TYPE	/* Maximum message number */
 };
 
 enum ipc_glb_reply {
@@ -298,6 +300,7 @@ struct sst_hsw {
 	u32 curve_duration;
 	u32 mute[SST_HSW_NO_CHANNELS];
 	u32 mute_volume[SST_HSW_NO_CHANNELS];
+	bool lbm; /* loopback mode */
 
 	/* DX */
 	struct sst_hsw_ipc_dx_reply dx;
@@ -1632,6 +1635,32 @@ int sst_hsw_device_set_config(struct sst_hsw *hsw,
 }
 EXPORT_SYMBOL_GPL(sst_hsw_device_set_config);
 
+/* loopback mode config, for loopback debug */
+int sst_hsw_device_set_loopback(struct sst_hsw *hsw, bool lbm)
+{
+	int ret;
+
+	trace_ipc_request("set loopback", lbm);
+
+	ret = sst_ipc_tx_message_wait(&hsw->ipc,
+		IPC_GLB_TYPE((lbm ? IPC_GLB_ENABLE_LOOPBACK : IPC_GLB_DISABLE_LOOPBACK)),
+		NULL, 0, NULL, 0);
+	if (ret < 0) {
+		dev_err(hsw->dev, "error: set loopback failed\n");
+		return ret;
+	}
+	hsw->lbm = lbm;
+	return ret;
+}
+EXPORT_SYMBOL_GPL(sst_hsw_device_set_loopback);
+
+/* loopback mode config, for loopback debug */
+bool sst_hsw_device_get_loopback(struct sst_hsw *hsw)
+{
+	return hsw->lbm;
+}
+EXPORT_SYMBOL_GPL(sst_hsw_device_get_loopback);
+
 /* DX Config */
 int sst_hsw_dx_set_state(struct sst_hsw *hsw,
 	enum sst_hsw_dx_state state, struct sst_hsw_ipc_dx_reply *dx)
@@ -1827,7 +1856,7 @@ int sst_hsw_dsp_load(struct sst_hsw *hsw)
 static int sst_hsw_dsp_restore(struct sst_hsw *hsw)
 {
 	struct sst_dsp *dsp = hsw->dsp;
-	int ret;
+	int ret = 0;
 
 	dev_dbg(hsw->dev, "restoring audio DSP....");
 

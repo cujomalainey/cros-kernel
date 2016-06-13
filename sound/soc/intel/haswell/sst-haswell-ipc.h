@@ -493,6 +493,9 @@ int sst_hsw_device_set_config(struct sst_hsw *hsw,
 	enum sst_hsw_device_id dev, enum sst_hsw_device_mclk mclk,
 	enum sst_hsw_device_mode mode, u32 clock_divider);
 
+int sst_hsw_device_set_loopback(struct sst_hsw *hsw, bool lbm);
+bool sst_hsw_device_get_loopback(struct sst_hsw *hsw);
+
 /* DX Config */
 int sst_hsw_dx_set_state(struct sst_hsw *hsw,
 	enum sst_hsw_dx_state state, struct sst_hsw_ipc_dx_reply *dx);
