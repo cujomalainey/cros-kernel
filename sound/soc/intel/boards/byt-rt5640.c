@@ -231,7 +231,7 @@ static struct snd_soc_dai_link byt_rt5640_dais[] = {
 	/* Back End DAI links */
 	{
 		.name = "SSP2-Codec",
-		.be_id = 1,
+		.id = 1,
 		.cpu_dai_name = "snd-soc-dummy-dai",
 		.platform_name = "snd-soc-dummy",
 		.no_pcm = 1,
