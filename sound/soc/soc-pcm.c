@@ -2262,7 +2262,7 @@ static int dpcm_fe_dai_prepare(struct snd_pcm_substream *substream)
 		dev_err(fe->dev, "ASoC: no backend DAIs enabled for %s\n",
 				fe->dai_link->name);
 		ret = -EINVAL;
-		goto out;
+		//goto out;
 	}
 
 	ret = dpcm_be_dai_prepare(fe, substream->stream);
