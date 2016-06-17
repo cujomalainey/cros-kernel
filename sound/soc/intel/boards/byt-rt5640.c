@@ -216,14 +216,26 @@ static struct snd_soc_ops byt_rt5640_ops = {
 
 static struct snd_soc_dai_link byt_rt5640_dais[] = {
 	{
-		.name = "System PCM",
+		.name = "PCM0",
 		.stream_name = "System",
-		.cpu_dai_name = "haswell-pcm-audio",
+		.cpu_dai_name = "PCM0 Pin",
 		.platform_name = "haswell-pcm-audio",
 		.dynamic = 1,
 		.codec_name = "snd-soc-dummy",
 		.codec_dai_name = "snd-soc-dummy-dai",
 		.init = byt_rt5640_init,
+		.trigger = {SND_SOC_DPCM_TRIGGER_POST, SND_SOC_DPCM_TRIGGER_POST},
+		.dpcm_playback = 1,
+		.dpcm_capture = 1,
+	},
+	{
+		.name = "PCM1",
+		.stream_name = "PCM1 Playback",
+		.cpu_dai_name = "PCM1 Pin",
+		.platform_name = "haswell-pcm-audio",
+		.dynamic = 1,
+		.codec_name = "snd-soc-dummy",
+		.codec_dai_name = "snd-soc-dummy-dai",
 		.trigger = {SND_SOC_DPCM_TRIGGER_POST, SND_SOC_DPCM_TRIGGER_POST},
 		.dpcm_playback = 1,
 		.dpcm_capture = 1,
@@ -235,7 +247,7 @@ static struct snd_soc_dai_link byt_rt5640_dais[] = {
 		.cpu_dai_name = "snd-soc-dummy-dai",
 		.platform_name = "snd-soc-dummy",
 		.no_pcm = 1,
-#if 1
+#if 0
 		.codec_dai_name = "rt5640-aif1",
 		.codec_name = "i2c-10EC5640:00",
 #else
