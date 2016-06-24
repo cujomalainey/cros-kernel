@@ -238,7 +238,7 @@ static struct snd_soc_dai_link byt_rt5640_dais[] = {
 		.codec_dai_name = "snd-soc-dummy-dai",
 		.trigger = {SND_SOC_DPCM_TRIGGER_POST, SND_SOC_DPCM_TRIGGER_POST},
 		.dpcm_playback = 1,
-		.dpcm_capture = 1,
+//		.dpcm_capture = 1,
 	},
 	/* Back End DAI links */
 	{

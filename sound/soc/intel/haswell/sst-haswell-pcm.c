@@ -408,6 +408,28 @@ static int hsw_waves_param_put(struct snd_kcontrol *kcontrol,
 	return ret;
 }
 
+static int hsw_loopback_switch_get(struct snd_kcontrol *kcontrol,
+				struct snd_ctl_elem_value *ucontrol)
+{
+	struct snd_soc_platform *platform = snd_soc_kcontrol_platform(kcontrol);
+	struct hsw_priv_data *pdata = snd_soc_platform_get_drvdata(platform);
+	struct sst_hsw *hsw = pdata->hsw;
+
+	ucontrol->value.integer.value[0] = sst_hsw_device_get_loopback(hsw);
+	return 0;
+}
+
+static int hsw_loopback_switch_put(struct snd_kcontrol *kcontrol,
+				struct snd_ctl_elem_value *ucontrol)
+{
+	struct snd_soc_platform *platform = snd_soc_kcontrol_platform(kcontrol);
+	struct hsw_priv_data *pdata = snd_soc_platform_get_drvdata(platform);
+	struct sst_hsw *hsw = pdata->hsw;
+	bool switch_on = (bool)ucontrol->value.integer.value[0];
+
+	return sst_hsw_device_set_loopback(hsw, switch_on);
+}
+
 /* TLV used by both global and stream volumes */
 static const DECLARE_TLV_DB_SCALE(hsw_vol_tlv, -4800, 300, 1);
 
@@ -449,6 +471,9 @@ static const struct snd_kcontrol_new hsw_volume_controls[] = {
 	SND_SOC_BYTES_EXT("Waves Set Param", WAVES_PARAM_COUNT,
 		hsw_waves_param_get, hsw_waves_param_put),
 #endif
+	/* enable/disable module waves */
+	SOC_SINGLE_BOOL_EXT("Loopback Switch", 0,
+		hsw_loopback_switch_get, hsw_loopback_switch_put),
 };
 
 /* Create DMA buffer page table for DSP */
