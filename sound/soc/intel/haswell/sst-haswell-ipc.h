@@ -294,6 +294,11 @@ struct sst_hsw_ipc_debug_log_reply {
 	u32 log_buffer_size;
 } __attribute__((packed));
 
+/* Debug Dump Log position update */
+struct sst_hsw_ipc_debug_log_pos_update {
+	u32 log_size;
+} __attribute__((packed));
+
 /* Stream glitch position */
 struct sst_hsw_ipc_stream_glitch_position {
 	u32 glitch_type;

@@ -279,6 +279,23 @@ struct sst_hsw_log_stream {
 	struct sst_hsw *hsw;
 };
 
+struct dma_trace_sg {
+	int size;
+	void *buf;
+	struct list_head list;
+};
+
+struct dma_trace_buffer {
+	u32 size; /* total sg elems size */
+	int read_offset; /* the read ptr in rcurrent */
+	int write_offset; /* the write ptr in wcurrent */
+	int pending_size; /* the data size pending to copy to userspace */
+	struct list_head elem_list;
+	struct list_head *rcurrent;
+	struct list_head *wcurrent;
+	u32 current_end;
+};
+
 /* SST Haswell IPC data */
 struct sst_hsw {
 	struct device *dev;
@@ -318,6 +335,12 @@ struct sst_hsw {
 
 	/* IPC messaging */
 	struct sst_generic_ipc ipc;
+
+	/* dma_trace buffer */
+	struct snd_dma_buffer trace_dma_descriptor;
+	struct sst_hsw_ipc_debug_log_enable_req dt_enable_request;
+	struct snd_dma_buffer dtrace_buffer;
+	struct dma_trace_buffer host_buffer;
 
 	/* FW log stream */
 	struct sst_hsw_log_stream log_stream;
@@ -502,6 +525,115 @@ static const struct file_operations sst_dfs_fops = {
 	.llseek = default_llseek,
 };
 
+static int sst_dma_trace_open(struct inode *inode, struct file *file)
+{
+	struct sst_hsw *hsw = inode->i_private;
+	struct sst_hsw_ipc_debug_log_enable_req *dtrace_req =
+		&hsw->dt_enable_request;
+	struct sst_hsw_ipc_debug_log_reply reply;
+	struct dma_trace_buffer *hbuf = &hsw->host_buffer;
+	u32 header;
+	int ret;
+
+	file->private_data = hsw;
+
+	reply.log_buffer_size = 0;
+	hbuf->read_offset = hbuf->write_offset = 0;
+	hbuf->pending_size = 0;
+	hbuf->rcurrent = hbuf->wcurrent = hbuf->elem_list.next;
+
+	header = IPC_GLB_TYPE(IPC_GLB_DEBUG_LOG_MESSAGE);
+
+	dtrace_req->config[0] = IPC_DEBUG_ENABLE_LOG;
+	dtrace_req->config[1] = PAGE_SIZE/2;
+	ret = sst_ipc_tx_message_wait(&hsw->ipc, header, dtrace_req,
+			  sizeof(*dtrace_req), &reply, sizeof(reply));
+	if (ret < 0) {
+		dev_err(hsw->dev, "error: stream comint failed\n");
+		return ret;
+	}
+
+	return 0;
+}
+
+static int sst_dma_trace_release(struct inode *inode, struct file *file)
+{
+	struct sst_hsw *hsw = inode->i_private;
+	struct sst_hsw_ipc_debug_log_enable_req *dtrace_req =
+		&hsw->dt_enable_request;
+	struct sst_hsw_ipc_debug_log_reply reply;
+	u32 header;
+	int ret;
+
+	header = IPC_GLB_TYPE(IPC_GLB_DEBUG_LOG_MESSAGE);
+
+	dtrace_req->config[0] = IPC_DEBUG_DISABLE_LOG;
+	dtrace_req->config[1] = PAGE_SIZE/2;
+	ret = sst_ipc_tx_message_wait(&hsw->ipc, header, dtrace_req,
+			  sizeof(*dtrace_req), &reply, sizeof(reply));
+	if (ret < 0) {
+		dev_err(hsw->dev, "error: stream comint failed\n");
+		return ret;
+	}
+
+	return 0;
+}
+
+static inline struct list_head *next_dma_trace_sg(struct sst_hsw *hsw,
+						  struct list_head *list)
+{
+	if (list_is_last(list, &hsw->host_buffer.elem_list))
+		return hsw->host_buffer.elem_list.next;
+	else
+		return list->next;
+}
+
+static ssize_t sst_dma_trace_read(struct file *file, char __user *buffer,
+					  size_t count, loff_t *ppos)
+{
+	struct sst_hsw *hsw = file->private_data;
+	struct dma_trace_buffer *hbuf = &hsw->host_buffer;
+	struct dma_trace_sg *sg_elem;
+	int sg_size, msg_size, cnt = 0, ret;
+
+	memset(buffer, 0, count);
+	while (hbuf->pending_size > 0) {
+		sg_elem = list_entry(hbuf->rcurrent, struct dma_trace_sg, list);
+		sg_size = sg_elem->size;
+		/* the dma trace buffer is a ring sg buffer
+		 * msg_size should be:
+		 * 1. if rcurrent != wcurrent, msg_size is sg_size - read_offset
+		 * 2. if rcurrent == wcurrent
+		 *  1) if pending_size > (sg_size - read_offset),
+		 *     the ring is rolled over
+		 *     (sg_size - read_offset) data should be transferred
+		 *  2) if pending_size <= (sg_size - read_offset),
+		 *     transfer all the pending_size data
+		 */
+		msg_size = min(hbuf->pending_size, sg_size - hbuf->read_offset);
+		ret = copy_to_user(buffer, sg_elem->buf + hbuf->read_offset,
+				   msg_size);
+		ret = msg_size - ret;
+		cnt += ret;
+		hbuf->read_offset += ret;
+		if (hbuf->read_offset == sg_size) {
+			hbuf->rcurrent = next_dma_trace_sg(hsw, hbuf->rcurrent);
+			hbuf->read_offset = 0;
+		}
+		hbuf->pending_size -= ret;
+	}
+
+	msleep(100);
+	return cnt + 1;
+}
+
+static const struct file_operations sst_dma_trace_fops = {
+	.open = sst_dma_trace_open,
+	.read = sst_dma_trace_read,
+	.llseek = default_llseek,
+	.release = sst_dma_trace_release,
+};
+
 static int hsw_debugfs_entry_create(struct sst_dsp *sst, void __iomem *base,
 	size_t size, const char *name)
 {
@@ -560,10 +692,48 @@ static const struct sst_debugfs_map debugfs_bdw[] = {
 	{"mbox", 0x144000, 0x1000},
 };
 
-
-static int hsw_debugfs_init(struct sst_dsp *sst)
+#define DMA_TRACE_PAGE_NUMBER 4
+static int hsw_setup_dma_trace_page_table(struct sst_hsw *hsw)
 {
+	struct snd_dma_buffer *dmab = &hsw->dtrace_buffer;
+	struct dma_trace_buffer *hbuf = &hsw->host_buffer;
+	struct dma_trace_sg *sg_elem;
+	int i, pages;
+
+	hbuf->read_offset = 0;
+	hbuf->write_offset = 0;
+	hbuf->rcurrent = hbuf->wcurrent = hbuf->elem_list.next;
+	pages = DMA_TRACE_PAGE_NUMBER;
+	hbuf->size = pages * PAGE_SIZE;
+
+	for (i = 0; i < pages; i++) {
+		u32 idx = (((i << 2) + i)) >> 1;
+		u32 pfn = snd_sgbuf_get_addr(dmab, i * PAGE_SIZE) >> PAGE_SHIFT;
+		u32 *pg_table;
+
+		sg_elem = devm_kzalloc(hsw->dev, sizeof(*sg_elem), GFP_KERNEL);
+		sg_elem->size = PAGE_SIZE;
+		sg_elem->buf = snd_sgbuf_get_ptr(dmab, i * PAGE_SIZE);
+		list_add_tail(&sg_elem->list, &hbuf->elem_list);
+		pg_table = (u32 *)(hsw->trace_dma_descriptor.area + idx);
+
+		if (i & 1)
+			*pg_table |= (pfn << 4);
+		else
+			*pg_table |= pfn;
+	}
+
+	hbuf->rcurrent = hbuf->wcurrent = hbuf->elem_list.next;
+
+	return 0;
+}
+
+static int hsw_debugfs_init(struct sst_hsw *hsw)
+{
+	struct sst_dsp *sst = hsw->dsp;
+	struct sst_pdata *pdata = sst->pdata;
 	int err = 0, i;
+	struct dentry *d;
 
 	for (i = 0; i < ARRAY_SIZE(debugfs_byt); i++) {
 		err = hsw_debugfs_entry_create(sst,
@@ -571,6 +741,42 @@ static int hsw_debugfs_init(struct sst_dsp *sst)
 			debugfs_byt[i].size, debugfs_byt[i].name);
 		if (err < 0)
 			dev_err(sst->dev, "cannot create debugfs for %s\n", debugfs_byt[i].name);
+	}
+
+	INIT_LIST_HEAD(&hsw->host_buffer.elem_list);
+	/* 1. alloc host buffer */
+	err = snd_dma_alloc_pages(SNDRV_DMA_TYPE_DEV, pdata->dma_dev,
+				  PAGE_SIZE, &hsw->trace_dma_descriptor);
+	if (err < 0)
+		return err;
+
+	err = snd_dma_alloc_pages(SNDRV_DMA_TYPE_DEV_SG, pdata->dma_dev,
+				  PAGE_SIZE * DMA_TRACE_PAGE_NUMBER,
+				  &hsw->dtrace_buffer);
+	if (err < 0) {
+		snd_dma_free_pages(&hsw->trace_dma_descriptor);
+		return err;
+	}
+
+	err = hsw_setup_dma_trace_page_table(hsw);
+	if (err < 0) {
+		snd_dma_free_pages(&hsw->trace_dma_descriptor);
+		snd_dma_free_pages(&hsw->dtrace_buffer);
+		return err;
+	}
+
+	hsw->dt_enable_request.ringinfo.ring_pt_address =
+		hsw->trace_dma_descriptor.addr;
+	hsw->dt_enable_request.ringinfo.num_pages = DMA_TRACE_PAGE_NUMBER;
+	hsw->dt_enable_request.ringinfo.ring_offset = 0;
+
+	/* 2. init debugfs */
+	d = debugfs_create_file("dma_trace", 0444, sst->debugfs_root,
+					hsw, &sst_dma_trace_fops);
+	if (!d) {
+		snd_dma_free_pages(&hsw->trace_dma_descriptor);
+		snd_dma_free_pages(&hsw->dtrace_buffer);
+		return -ENODEV;
 	}
 
 	return err;
@@ -852,7 +1058,14 @@ static int hsw_log_message(struct sst_hsw *hsw, u32 header)
 {
 	u32 operation = (header & IPC_LOG_OP_MASK) >>  IPC_LOG_OP_SHIFT;
 	struct sst_hsw_log_stream *stream = &hsw->log_stream;
+	struct sst_hsw_ipc_debug_log_pos_update pos;
+	struct dma_trace_buffer *hbuf = &hsw->host_buffer;
 	int ret = 1;
+
+	sst_dsp_shim_update_bits64_unlocked(hsw->dsp, SST_IPCD,
+			SST_BYT_IPCD_BUSY | SST_BYT_IPCD_DONE,
+				SST_BYT_IPCD_DONE);
+	sst_dsp_shim_update_bits_unlocked(hsw->dsp, SST_IMRX, SST_IMRX_BUSY, 0);
 
 	if (operation != IPC_DEBUG_REQUEST_LOG_DUMP) {
 		dev_err(hsw->dev,
@@ -860,13 +1073,16 @@ static int hsw_log_message(struct sst_hsw *hsw, u32 header)
 		return 0;
 	}
 
-	mutex_lock(&stream->rw_mutex);
 	stream->last_pos = stream->curr_pos;
-	sst_dsp_inbox_read(
-		hsw->dsp, &stream->curr_pos, sizeof(stream->curr_pos));
-	mutex_unlock(&stream->rw_mutex);
-
-	schedule_work(&stream->notify_work);
+	pos.log_size = 0;
+	sst_dsp_inbox_read(hsw->dsp, &pos, sizeof(pos));
+	hbuf->pending_size += pos.log_size;
+	/*
+	 * if pending_size > hbuf->size, it means
+	 * some msg data has been overwritten
+	 */
+	if (hbuf->pending_size > hbuf->size)
+		hbuf->pending_size = hbuf->size;
 
 	return ret;
 }
@@ -2530,7 +2746,7 @@ int sst_hsw_dsp_init(struct device *dev, struct sst_pdata *pdata)
 		goto boot_err;
 	}
 
-	hsw_debugfs_init(hsw->dsp);
+	hsw_debugfs_init(hsw);
 
 	/* init module state after boot */
 	sst_hsw_init_module_state(hsw);
@@ -2567,6 +2783,8 @@ void sst_hsw_dsp_free(struct device *dev, struct sst_pdata *pdata)
 {
 	struct sst_hsw *hsw = pdata->dsp;
 
+	snd_dma_free_pages(&hsw->trace_dma_descriptor);
+	snd_dma_free_pages(&hsw->dtrace_buffer);
 	sst_dsp_reset(hsw->dsp);
 	sst_fw_free_all(hsw->dsp);
 	dma_free_coherent(hsw->dsp->dma_dev, SST_HSW_DX_CONTEXT_SIZE,
