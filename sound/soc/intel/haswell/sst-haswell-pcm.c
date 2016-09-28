@@ -33,8 +33,8 @@
 #include "../common/sst-dsp-priv.h"
 #include "../common/sst-dsp.h"
 
-#define HSW_PCM_COUNT		6
-#define HSW_VOLUME_MAX		0x7FFFFFFF	/* 0dB */
+#define HSW_PCM_COUNT		1
+#define HSW_VOLUME_MAX		(1 << 16)	/* 0dB */
 
 #define SST_OLD_POSITION(d, r, o) ((d) +		\
 			frames_to_bytes(r, o))
@@ -43,6 +43,7 @@
 
 /* simple volume table */
 static const u32 volume_map[] = {
+#if 0
 	HSW_VOLUME_MAX >> 30,
 	HSW_VOLUME_MAX >> 29,
 	HSW_VOLUME_MAX >> 28,
@@ -57,6 +58,7 @@ static const u32 volume_map[] = {
 	HSW_VOLUME_MAX >> 19,
 	HSW_VOLUME_MAX >> 18,
 	HSW_VOLUME_MAX >> 17,
+#endif
 	HSW_VOLUME_MAX >> 16,
 	HSW_VOLUME_MAX >> 15,
 	HSW_VOLUME_MAX >> 14,
@@ -407,7 +409,7 @@ static int hsw_waves_param_put(struct snd_kcontrol *kcontrol,
 }
 
 /* TLV used by both global and stream volumes */
-static const DECLARE_TLV_DB_SCALE(hsw_vol_tlv, -9000, 300, 1);
+static const DECLARE_TLV_DB_SCALE(hsw_vol_tlv, -4800, 300, 1);
 
 /* System Pin has no volume control */
 static const struct snd_kcontrol_new hsw_volume_controls[] = {
@@ -415,6 +417,7 @@ static const struct snd_kcontrol_new hsw_volume_controls[] = {
 	SOC_DOUBLE_EXT_TLV("Master Playback Volume", 0, 0, 8,
 		ARRAY_SIZE(volume_map) - 1, 0,
 		hsw_volume_get, hsw_volume_put, hsw_vol_tlv),
+#if 0
 	/* Offload 0 volume */
 	SOC_DOUBLE_EXT_TLV("Media0 Playback Volume", 1, 0, 8,
 		ARRAY_SIZE(volume_map) - 1, 0,
@@ -433,6 +436,7 @@ static const struct snd_kcontrol_new hsw_volume_controls[] = {
 	/* set parameters to module waves */
 	SND_SOC_BYTES_EXT("Waves Set Param", WAVES_PARAM_COUNT,
 		hsw_waves_param_get, hsw_waves_param_put),
+#endif
 };
 
 /* Create DMA buffer page table for DSP */
