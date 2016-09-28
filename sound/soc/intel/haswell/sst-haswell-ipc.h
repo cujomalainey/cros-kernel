@@ -48,6 +48,7 @@ struct sst_pdata;
 struct sst_module;
 struct sst_module_runtime;
 extern struct sst_ops haswell_ops;
+extern struct sst_ops sst_baytrail_ops;
 
 /* Stream Allocate Path ID */
 enum sst_hsw_stream_path_id {
@@ -77,6 +78,7 @@ enum sst_hsw_stream_format {
 enum sst_hsw_device_id {
 	SST_HSW_DEVICE_SSP_0   = 0,
 	SST_HSW_DEVICE_SSP_1   = 1,
+	SST_HSW_DEVICE_SSP_2   = 2,
 };
 
 /* Device Master Clock Frequency */
