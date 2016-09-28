@@ -640,10 +640,11 @@ static int hsw_pcm_hw_params(struct snd_pcm_substream *substream,
 
 	dsp = sst_hsw_get_dsp(hsw);
 
+	// TODO: we are not actually using the module config anymore ??
 	module_data = sst_module_get_from_id(dsp, module_id);
 	if (module_data == NULL) {
-		dev_err(rtd->dev, "error: failed to get module config\n");
-		return -EINVAL;
+		//dev_err(rtd->dev, "error: failed to get module config\n");
+		//return -EINVAL;
 	}
 
 	sst_hsw_stream_set_module_info(hsw, pcm_data->stream,
