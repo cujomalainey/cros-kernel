@@ -655,6 +655,7 @@ static int hsw_pcm_hw_params(struct snd_pcm_substream *substream,
 		return ret;
 	}
 
+#if 0
 	if (!pcm_data->allocated) {
 		/* Set previous saved volume */
 		sst_hsw_stream_set_volume(hsw, pcm_data->stream, 0,
@@ -664,10 +665,10 @@ static int hsw_pcm_hw_params(struct snd_pcm_substream *substream,
 		pcm_data->allocated = true;
 	}
 
-	ret = sst_hsw_stream_pause(hsw, pcm_data->stream, 1);
-	if (ret < 0)
-		dev_err(rtd->dev, "error: failed to pause %d\n", ret);
-
+//	ret = sst_hsw_stream_pause(hsw, pcm_data->stream, 1);
+	//if (ret < 0)
+	//	dev_err(rtd->dev, "error: failed to pause %d\n", ret);
+#endif
 	return 0;
 }
 
