@@ -708,7 +708,7 @@ static int hsw_process_reply(struct sst_hsw *hsw, u32 header)
 			hsw->ipc.pending = false;
 		} else {
 			/* copy data from the DSP */
-			sst_dsp_outbox_read(hsw->dsp, msg->rx_data,
+			sst_dsp_inbox_read(hsw->dsp, msg->rx_data,
 				msg->rx_size);
 		}
 		break;
