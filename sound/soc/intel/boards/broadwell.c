@@ -72,8 +72,8 @@ static const struct snd_soc_dapm_route broadwell_rt286_map[] = {
 	{"DMIC2 Pin", NULL, "DMIC2"},
 
 	/* CODEC BE connections */
-	{"SSP0 CODEC IN", NULL, "AIF1 Capture"},
-	{"AIF1 Playback", NULL, "SSP0 CODEC OUT"},
+	{"SSP CODEC IN", NULL, "AIF1 Capture"},
+	{"AIF1 Playback", NULL, "SSP CODEC OUT"},
 };
 
 static int broadwell_rt286_codec_init(struct snd_soc_pcm_runtime *rtd)
@@ -86,7 +86,7 @@ static int broadwell_rt286_codec_init(struct snd_soc_pcm_runtime *rtd)
 	if (ret)
 		return ret;
 
-	rt286_mic_detect(codec, &broadwell_headset);
+	//rt286_mic_detect(codec, &broadwell_headset);
 	return 0;
 }
 
@@ -152,9 +152,11 @@ static int broadwell_rtd_init(struct snd_soc_pcm_runtime *rtd)
 static struct snd_soc_dai_link broadwell_rt286_dais[] = {
 	/* Front End DAI links */
 	{
-		.name = "System PCM",
+//		.name = "System PCM",
+		.name = "PCM0",
 		.stream_name = "System Playback/Capture",
-		.cpu_dai_name = "System Pin",
+//		.cpu_dai_name = "System Pin",
+		.cpu_dai_name = "PCM0 Pin",
 		.platform_name = "haswell-pcm-audio",
 		.dynamic = 1,
 		.codec_name = "snd-soc-dummy",
@@ -164,6 +166,19 @@ static struct snd_soc_dai_link broadwell_rt286_dais[] = {
 		.dpcm_playback = 1,
 		.dpcm_capture = 1,
 	},
+
+	{
+		.name = "PCM1",
+		.stream_name = "PCM1 Playback",
+		.cpu_dai_name = "PCM1 Pin",
+		.platform_name = "haswell-pcm-audio",
+		.dynamic = 1,
+		.codec_name = "snd-soc-dummy",
+		.codec_dai_name = "snd-soc-dummy-dai",
+		.trigger = {SND_SOC_DPCM_TRIGGER_POST, SND_SOC_DPCM_TRIGGER_POST},
+		.dpcm_playback = 1,
+	},
+#if 0
 	{
 		.name = "Offload0",
 		.stream_name = "Offload0 Playback",
@@ -197,6 +212,7 @@ static struct snd_soc_dai_link broadwell_rt286_dais[] = {
 		.trigger = {SND_SOC_DPCM_TRIGGER_POST, SND_SOC_DPCM_TRIGGER_POST},
 		.dpcm_capture = 1,
 	},
+#endif
 	/* Back End DAI links */
 	{
 		/* SSP0 - Codec */
@@ -205,15 +221,20 @@ static struct snd_soc_dai_link broadwell_rt286_dais[] = {
 		.cpu_dai_name = "snd-soc-dummy-dai",
 		.platform_name = "snd-soc-dummy",
 		.no_pcm = 1,
+#if 0
 		.codec_name = "i2c-INT343A:00",
 		.codec_dai_name = "rt286-aif1",
+#else
+		.codec_name = "snd-soc-dummy",
+		.codec_dai_name = "snd-soc-dummy-dai",
+#endif
 		.init = broadwell_rt286_codec_init,
 		.dai_fmt = SND_SOC_DAIFMT_I2S | SND_SOC_DAIFMT_NB_NF |
 			SND_SOC_DAIFMT_CBS_CFS,
 		.ignore_suspend = 1,
 		.ignore_pmdown_time = 1,
 		.be_hw_params_fixup = broadwell_ssp0_fixup,
-		.ops = &broadwell_rt286_ops,
+		//.ops = &broadwell_rt286_ops,
 		.dpcm_playback = 1,
 		.dpcm_capture = 1,
 	},
