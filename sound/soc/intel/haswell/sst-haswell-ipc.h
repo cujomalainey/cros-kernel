@@ -346,7 +346,7 @@ struct sst_hsw_audio_data_format_ipc {
 	u32 style;
 	u8 ch_num;
 	u8 valid_bit;
-	u8 reserved[2];
+	u32 period_frames;
 } __attribute__((packed));
 
 /* Stream Allocate Request */
@@ -444,6 +444,8 @@ int sst_hsw_stream_set_valid(struct sst_hsw *hsw, struct sst_hsw_stream *stream,
 	u32 bits);
 int sst_hsw_stream_set_rate(struct sst_hsw *hsw, struct sst_hsw_stream *stream,
 	int rate);
+int sst_hsw_stream_set_period(struct sst_hsw *hsw,
+	struct sst_hsw_stream *stream, u32 frames);
 int sst_hsw_stream_set_bits(struct sst_hsw *hsw, struct sst_hsw_stream *stream,
 	enum sst_hsw_bitdepth bits);
 int sst_hsw_stream_set_channels(struct sst_hsw *hsw,

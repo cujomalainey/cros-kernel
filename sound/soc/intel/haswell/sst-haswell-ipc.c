@@ -1216,6 +1216,18 @@ out:
 	return ret;
 }
 
+int sst_hsw_stream_set_period(struct sst_hsw *hsw,
+	struct sst_hsw_stream *stream, u32 frames)
+{
+	if (stream->commited) {
+		dev_err(hsw->dev, "error: stream committed for set bits\n");
+		return -EINVAL;
+	}
+
+	stream->request.format.period_frames = frames;
+	return 0;
+}
+
 int sst_hsw_stream_set_bits(struct sst_hsw *hsw,
 	struct sst_hsw_stream *stream, enum sst_hsw_bitdepth bits)
 {
