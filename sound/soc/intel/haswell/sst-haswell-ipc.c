@@ -1650,7 +1650,7 @@ struct sst_module_runtime *sst_hsw_runtime_module_create(struct sst_hsw *hsw,
 	struct sst_module *module;
 	struct sst_module_runtime *runtime;
 	int err;
-
+mod_id = 0;
 	module = sst_module_get_from_id(dsp, mod_id);
 	if (module == NULL) {
 		dev_err(dsp->dev, "error: failed to get module %d for pcm\n",
@@ -1664,7 +1664,7 @@ struct sst_module_runtime *sst_hsw_runtime_module_create(struct sst_hsw *hsw,
 			mod_id);
 		return NULL;
 	}
-
+//return runtime;
 	err = sst_module_runtime_alloc_blocks(runtime, offset);
 	if (err < 0) {
 		dev_err(dsp->dev, "error: failed to alloc blocks for module %d runtime\n",
@@ -1743,7 +1743,7 @@ static int sst_hsw_dx_state_restore(struct sst_hsw *hsw)
 	struct sst_dsp *sst = hsw->dsp;
 	u32 item, offset, size;
 	int ret;
-return 0;
+
 	for (item = 0; item < hsw->dx.entries_no; item++) {
 		if (hsw->dx.mem_info[item].source == SST_HSW_DX_TYPE_MEMORY_DUMP
 			&& hsw->dx.mem_info[item].offset > DSP_DRAM_ADDR_OFFSET
