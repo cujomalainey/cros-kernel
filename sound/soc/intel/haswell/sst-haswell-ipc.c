@@ -1552,7 +1552,7 @@ static int sst_hsw_dx_state_restore(struct sst_hsw *hsw)
 	struct sst_dsp *sst = hsw->dsp;
 	u32 item, offset, size;
 	int ret;
-
+return 0;
 	for (item = 0; item < hsw->dx.entries_no; item++) {
 		if (hsw->dx.mem_info[item].source == SST_HSW_DX_TYPE_MEMORY_DUMP
 			&& hsw->dx.mem_info[item].offset > DSP_DRAM_ADDR_OFFSET
