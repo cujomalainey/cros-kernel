@@ -437,6 +437,122 @@ static struct sst_hsw_stream *get_stream_by_id(struct sst_hsw *hsw,
 	return NULL;
 }
 
+struct sst_dfsentry {
+	struct dentry *dfsentry;
+	size_t size;
+	void *buf;
+	struct sst_dsp *sst;
+};
+
+static int sst_dfsentry_open(struct inode *inode, struct file *file)
+{
+	file->private_data = inode->i_private;
+
+	return 0;
+}
+
+static ssize_t sst_dfsentry_read(struct file *file, char __user *buffer,
+				 size_t count, loff_t *ppos)
+{
+	struct sst_dfsentry *dfse = file->private_data;
+	int size;
+	u32 *buf;
+	loff_t pos = *ppos;
+	size_t ret;
+
+	dev_dbg(dfse->sst->dev, "pbuf: %p, *ppos: 0x%llx\n", buffer, *ppos);
+
+	size = dfse->size;
+
+	if (pos < 0)
+		return -EINVAL;
+	if (pos >= size || !count)
+		return 0;
+	if (count > size - pos)
+		count = size - pos;
+
+	size = (count + 3) & (~3);
+	buf = kzalloc(size, GFP_KERNEL);
+	if (!buf)
+		return -ENOMEM;
+
+	pm_runtime_get(dfse->sst->dev);
+	sst_memcpy_fromio_32(dfse->sst, buf, dfse->buf + pos, size);
+	pm_runtime_put(dfse->sst->dev);
+
+	ret = copy_to_user(buffer, buf, count);
+	kfree(buf);
+
+	if (ret == count)
+		return -EFAULT;
+	count -= ret;
+	*ppos = pos + count;
+
+	dev_dbg(dfse->sst->dev, "*ppos: 0x%llx, count: %zu\n", *ppos, count);
+
+	return count;
+}
+
+static const struct file_operations sst_dfs_fops = {
+	.open = sst_dfsentry_open,
+	.read = sst_dfsentry_read,
+	.llseek = default_llseek,
+};
+
+static int hsw_debugfs_entry_create(struct sst_dsp *sst, void __iomem *base, size_t size, char *name)
+{
+	struct sst_dfsentry *dfse;
+
+	if (!sst)
+		return -EINVAL;
+
+	dfse = kzalloc(sizeof(*dfse), GFP_KERNEL);
+
+	if (!dfse)
+		return -ENOMEM;
+	dfse->buf = base;
+	dfse->size = size;//mbox size
+
+	dfse->dfsentry = debugfs_create_file(name, 0444, sst->debugfs_root,
+					     dfse, &sst_dfs_fops);
+	if (!dfse->dfsentry) {
+		dev_err(sst->dev, "cannot create debugfs entry.\n");
+		kfree(dfse);
+		return -ENODEV;
+	}
+
+	dfse->sst = sst;
+
+	return 0;
+}
+
+static int hsw_debugfs_init(struct sst_dsp *sst)
+{
+	int ret = 0;
+
+	ret = hsw_debugfs_entry_create(sst, sst->mailbox.in_base, 4096, "mbox");
+	if (ret < 0)
+		return ret;
+
+	ret = hsw_debugfs_entry_create(sst, sst->addr.shim, 256, "shim");
+	if (ret < 0)
+		return ret;
+
+	ret = hsw_debugfs_entry_create(sst,
+		(void __iomem *)((char *)sst->addr.lpe + 0xa2000), 0x90,
+		"ssp2");
+	if (ret < 0)
+		return ret;
+
+	ret = hsw_debugfs_entry_create(sst,
+		(void __iomem *)((char *)sst->addr.lpe + 0x9c000), 0x400,
+		"dmac1");
+
+	return ret;
+
+}
+
+
 static void hsw_fw_ready(struct sst_hsw *hsw, u32 header)
 {
 	struct sst_hsw_ipc_fw_ready fw_ready;
@@ -2324,6 +2440,8 @@ int sst_hsw_dsp_init(struct device *dev, struct sst_pdata *pdata)
 		ipc->ops.shim_dbg(ipc, "DSP boot timeout");
 		goto boot_err;
 	}
+
+	hsw_debugfs_init(hsw->dsp);
 
 	/* init module state after boot */
 	sst_hsw_init_module_state(hsw);
