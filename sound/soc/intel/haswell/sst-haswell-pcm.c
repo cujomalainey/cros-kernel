@@ -618,6 +618,8 @@ static int hsw_pcm_hw_params(struct snd_pcm_substream *substream,
 	sst_hsw_stream_set_style(hsw, pcm_data->stream,
 		SST_HSW_INTERLEAVING_PER_CHANNEL);
 
+	sst_hsw_stream_set_period(hsw, pcm_data->stream, params_period_size(params));
+
 	if (runtime->dma_bytes % PAGE_SIZE)
 		pages = (runtime->dma_bytes / PAGE_SIZE) + 1;
 	else
@@ -821,6 +823,10 @@ static int hsw_pcm_open(struct snd_pcm_substream *substream)
 
 	pcm_data->substream = substream;
 
+	snd_pcm_hw_constraint_step(substream->runtime, 0,
+		SNDRV_PCM_HW_PARAM_BUFFER_SIZE, PAGE_SIZE);
+	snd_pcm_hw_constraint_step(substream->runtime, 0,
+		SNDRV_PCM_HW_PARAM_PERIOD_SIZE, 256);
 	snd_soc_set_runtime_hwparams(substream, &hsw_pcm_hardware);
 
 	pcm_data->stream = sst_hsw_stream_new(hsw, rtd->cpu_dai->id,
