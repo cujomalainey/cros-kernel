@@ -369,8 +369,8 @@ finish:
 	reg = readl(sst->addr.pci_cfg + SST_VDRTCTL0);
 	reg |= SST_VDRTCL0_DSRAMPGE_MASK | SST_VDRTCL0_ISRAMPGE_MASK;
 	/* for D0, always enable the block(DSRAM[0]) used for FW dump */
-	fw_dump_bit = 1 << SST_VDRTCL0_DSRAMPGE_SHIFT;
-	writel(reg & ~fw_dump_bit, sst->addr.pci_cfg + SST_VDRTCTL0);
+	//fw_dump_bit = 1 << SST_VDRTCL0_DSRAMPGE_SHIFT;
+	writel(0 /*reg & ~fw_dump_bit*/, sst->addr.pci_cfg + SST_VDRTCTL0);
 
 
 	/* disable DMA finish function for SSP0 & SSP1 */
@@ -675,10 +675,10 @@ static int hsw_init(struct sst_dsp *sst, struct sst_pdata *pdata)
 	}
 
 	/* always enable the block(DSRAM[0]) used for FW dump */
-	fw_dump_bit = 1 << SST_VDRTCL0_DSRAMPGE_SHIFT;
+	//fw_dump_bit = 1 << SST_VDRTCL0_DSRAMPGE_SHIFT;
 	/* set default power gating control, enable power gating control for all blocks. that is,
 	can't be accessed, please enable each block before accessing. */
-	writel(0xffffffff & ~fw_dump_bit, sst->addr.pci_cfg + SST_VDRTCTL0);
+	//writel(0xffffffff & ~fw_dump_bit, sst->addr.pci_cfg + SST_VDRTCTL0);
 
 	return 0;
 }
