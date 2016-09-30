@@ -863,17 +863,7 @@ static void hsw_notification_work(struct work_struct *work)
 	}
 
 	/* tell DSP that notification has been handled */
-#if BDW
-	/* Haswell / Broadwell */
-	sst_dsp_shim_update_bits(hsw->dsp, SST_IPCD,
-		SST_IPCD_BUSY | SST_IPCD_DONE, SST_IPCD_DONE);
-		
-#else
-	/* Baytrail */
-	sst_dsp_shim_update_bits64(hsw->dsp, SST_IPCD,
-		SST_BYT_IPCD_BUSY | SST_BYT_IPCD_DONE,
-		SST_BYT_IPCD_DONE);
-#endif
+	hsw->ipc.ops.dsp_notify(hsw->dsp);
 
 	/* unmask busy interrupt */
 	sst_dsp_shim_update_bits(hsw->dsp, SST_IMRX, SST_IMRX_BUSY, 0);
@@ -2642,6 +2632,19 @@ static bool byt_is_dsp_busy(struct sst_dsp *dsp)
 	return (ipcx & (SST_BYT_IPCX_BUSY | SST_BYT_IPCX_DONE));
 }
 
+static void hsw_notify(struct sst_dsp *dsp)
+{
+	sst_dsp_shim_update_bits(dsp, SST_IPCD,
+		SST_IPCD_BUSY | SST_IPCD_DONE, SST_IPCD_DONE);
+}
+
+static void byt_notify(struct sst_dsp *dsp)
+{
+	sst_dsp_shim_update_bits64(dsp, SST_IPCD,
+		SST_BYT_IPCD_BUSY | SST_BYT_IPCD_DONE,
+		SST_BYT_IPCD_DONE);
+}
+
 int sst_hsw_dsp_init(struct device *dev, struct sst_pdata *pdata)
 {
 	struct sst_hsw_ipc_fw_version version;
@@ -2672,6 +2675,7 @@ int sst_hsw_dsp_init(struct device *dev, struct sst_pdata *pdata)
 		ipc->ops.tx_data_copy = hsw_tx_data_copy;
 		ipc->ops.reply_msg_match = hsw_reply_msg_match;
 		ipc->ops.is_dsp_busy = byt_is_dsp_busy;
+		ipc->ops.dsp_notify = byt_notify;
 		break;
 	case SST_DEV_ID_LYNX_POINT:
 	case SST_DEV_ID_WILDCAT_POINT:
@@ -2683,6 +2687,7 @@ int sst_hsw_dsp_init(struct device *dev, struct sst_pdata *pdata)
 		ipc->ops.tx_data_copy = hsw_tx_data_copy;
 		ipc->ops.reply_msg_match = hsw_reply_msg_match;
 		ipc->ops.is_dsp_busy = hsw_is_dsp_busy;
+		ipc->ops.dsp_notify = hsw_notify;
 		break;
 	default:
 		ret = -EINVAL;
