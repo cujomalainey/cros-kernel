@@ -42,6 +42,7 @@ struct sst_acpi_desc {
 	/* DMA only valid when resindex_dma_base != -1*/
 	int dma_engine;
 	int dma_size;
+	bool have_rtd3;
 };
 
 struct sst_acpi_priv {
@@ -107,6 +108,7 @@ static int sst_acpi_probe(struct platform_device *pdev)
 
 	sst_pdata = &sst_acpi->sst_pdata;
 	sst_pdata->id = desc->sst_id;
+	sst_pdata->have_rtd3 = desc->have_rtd3;
 	sst_pdata->dma_dev = dev;
 	sst_acpi->desc = desc;
 	sst_acpi->mach = mach;
@@ -195,6 +197,7 @@ static struct sst_acpi_desc sst_acpi_haswell_desc = {
 	.dma_engine = SST_DMA_TYPE_DW,
 	.resindex_dma_base = SST_LPT_DSP_DMA_ADDR_OFFSET,
 	.dma_size = SST_LPT_DSP_DMA_SIZE,
+	.have_rtd3 = true,
 };
 
 static struct sst_acpi_mach broadwell_machines[] = {
@@ -215,6 +218,7 @@ static struct sst_acpi_desc sst_acpi_broadwell_desc = {
 	.dma_engine = SST_DMA_TYPE_DW,
 	.resindex_dma_base = SST_WPT_DSP_DMA_ADDR_OFFSET,
 	.dma_size = SST_LPT_DSP_DMA_SIZE,
+	.have_rtd3 = true,
 };
 
 #if !IS_ENABLED(CONFIG_SND_SST_IPC_ACPI)
@@ -234,6 +238,7 @@ static struct sst_acpi_desc sst_acpi_baytrail_desc = {
 	.irqindex_host_ipc = 5,
 	.sst_id = SST_DEV_ID_BYT,
 	.resindex_dma_base = -1,
+	.have_rtd3 = false,
 };
 #endif
 

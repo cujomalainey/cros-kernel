@@ -1179,6 +1179,10 @@ static int hsw_pcm_probe(struct snd_soc_platform *platform)
 	if (ret < 0)
 		goto err;
 
+	/* not all DSPs support RTD3 */
+	if (pdata->have_rtd3 == false)
+		return 0;
+
 	/* enable runtime PM with auto suspend */
 	pm_runtime_set_autosuspend_delay(platform->dev,
 		SST_RUNTIME_SUSPEND_DELAY);
