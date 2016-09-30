@@ -110,8 +110,13 @@ static int sst_dsp_dma_copy(struct sst_dsp *sst, dma_addr_t dest_addr,
 int sst_dsp_dma_copyto(struct sst_dsp *sst, dma_addr_t dest_addr,
 	dma_addr_t src_addr, size_t size)
 {
-	return sst_dsp_dma_copy(sst, dest_addr | SST_HSW_MASK_DMA_ADDR_DSP,
+	if (sst->fw_use_dma)
+		return sst_dsp_dma_copy(sst, dest_addr | SST_HSW_MASK_DMA_ADDR_DSP,
 			src_addr, size);
+
+	/* fall back to memcpy() */
+	sst_memcpy32((volatile void*)dest_addr, (void*)src_addr, size);
+	return 0;
 }
 EXPORT_SYMBOL_GPL(sst_dsp_dma_copyto);
 
@@ -119,8 +124,13 @@ EXPORT_SYMBOL_GPL(sst_dsp_dma_copyto);
 int sst_dsp_dma_copyfrom(struct sst_dsp *sst, dma_addr_t dest_addr,
 	dma_addr_t src_addr, size_t size)
 {
-	return sst_dsp_dma_copy(sst, dest_addr,
-		src_addr | SST_HSW_MASK_DMA_ADDR_DSP, size);
+	if (sst->fw_use_dma)
+		return sst_dsp_dma_copy(sst, dest_addr,
+			src_addr | SST_HSW_MASK_DMA_ADDR_DSP, size);
+
+	/* fall back to memcpy() */
+	sst_memcpy32((volatile void*)dest_addr, (void*)src_addr, size);
+	return 0;
 }
 EXPORT_SYMBOL_GPL(sst_dsp_dma_copyfrom);
 
@@ -228,6 +238,10 @@ int sst_dsp_dma_get_channel(struct sst_dsp *dsp, int chan_id)
 	struct dma_slave_config slave;
 	dma_cap_mask_t mask;
 	int ret;
+
+	/* fall back to memcpy if DMA policy is disabled */
+	if (dsp->fw_use_dma == false)
+		return 0;
 
 	dma_cap_zero(mask);
 	dma_cap_set(DMA_SLAVE, mask);
