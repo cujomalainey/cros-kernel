@@ -32,6 +32,7 @@
 #include "../common/sst-dsp-priv.h"
 #include "../haswell/sst-haswell-ipc.h"
 
+#define CREATE_TRACE_POINTS
 #include <trace/events/hswadsp.h>
 
 #define SST_HSW_FW_SIGNATURE_SIZE	4

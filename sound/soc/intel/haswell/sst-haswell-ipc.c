@@ -356,7 +356,7 @@ struct sst_hsw {
 };
 
 #define CREATE_TRACE_POINTS
-#include <trace/events/hswadsp.h>
+#include <trace/events/hswipc.h>
 
 static inline u32 msg_get_global_type(u32 msg)
 {
