@@ -43,6 +43,7 @@ struct sst_acpi_desc {
 	int dma_engine;
 	int dma_size;
 	bool have_rtd3;
+	bool have_ext_fw_alloc;
 };
 
 struct sst_acpi_priv {
@@ -109,6 +110,7 @@ static int sst_acpi_probe(struct platform_device *pdev)
 	sst_pdata = &sst_acpi->sst_pdata;
 	sst_pdata->id = desc->sst_id;
 	sst_pdata->have_rtd3 = desc->have_rtd3;
+	sst_pdata->have_ext_fw_alloc = desc->have_ext_fw_alloc;
 	sst_pdata->dma_dev = dev;
 	sst_acpi->desc = desc;
 	sst_acpi->mach = mach;

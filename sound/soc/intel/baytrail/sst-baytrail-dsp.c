@@ -212,8 +212,10 @@ static void sst_byt_boot(struct sst_dsp *sst)
 	 * save the physical address of extended firmware block in the first
 	 * 4 bytes of the mailbox
 	 */
-	memcpy_toio(sst->addr.lpe + SST_BYT_MAILBOX_OFFSET,
-	       &sst->pdata->fw_base, sizeof(u32));
+	if (sst->pdata->have_ext_fw_alloc) {
+		memcpy_toio(sst->addr.lpe + SST_BYT_MAILBOX_OFFSET,
+		       &sst->pdata->fw_base, sizeof(u32));
+	}
 
 	/* release stall and wait to unstall */
 	sst_dsp_shim_update_bits64(sst, SST_CSR, SST_BYT_CSR_STALL, 0x0);
@@ -269,6 +271,14 @@ static int sst_byt_resource_map(struct sst_dsp *sst, struct sst_pdata *pdata)
 		return -ENODEV;
 	}
 
+	/* SST Shim */
+	sst->addr.shim = sst->addr.lpe + sst->addr.shim_offset;
+	sst->irq = pdata->irq;
+
+	/* resources complete if FW extended alloc not used */
+	if (!sst->pdata->have_ext_fw_alloc)
+		return 0;
+
 	/* SST Extended FW allocation */
 	sst->addr.fw_ext = ioremap(pdata->fw_base, pdata->fw_size);
 	if (!sst->addr.fw_ext) {
@@ -277,16 +287,11 @@ static int sst_byt_resource_map(struct sst_dsp *sst, struct sst_pdata *pdata)
 		return -ENODEV;
 	}
 
-	/* SST Shim */
-	sst->addr.shim = sst->addr.lpe + sst->addr.shim_offset;
 
 	sst_dsp_mailbox_init(sst, SST_BYT_MAILBOX_OFFSET + 0x204,
 			     SST_BYT_IPC_MAX_PAYLOAD_SIZE,
 			     SST_BYT_MAILBOX_OFFSET,
 			     SST_BYT_IPC_MAX_PAYLOAD_SIZE);
-
-	sst->irq = pdata->irq;
-
 	return 0;
 }
 

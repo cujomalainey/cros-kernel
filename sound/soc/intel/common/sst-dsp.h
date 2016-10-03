@@ -204,6 +204,7 @@ struct sst_pdata {
 	/* Firmware */
 	const struct firmware *fw;
 	bool have_rtd3;
+	bool have_ext_fw_alloc;
 
 	/* DMA */
 	int resindex_dma_base; /* other fields invalid if equals to -1 */
