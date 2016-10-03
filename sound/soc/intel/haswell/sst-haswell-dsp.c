@@ -708,3 +708,5 @@ struct sst_ops haswell_ops = {
 	.free = hsw_free,
 	.parse_fw = hsw_parse_fw_image,
 };
+EXPORT_SYMBOL_GPL(haswell_ops);
+MODULE_LICENSE("GPL v2");

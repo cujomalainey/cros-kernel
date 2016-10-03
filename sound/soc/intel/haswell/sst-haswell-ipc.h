@@ -48,7 +48,7 @@ struct sst_pdata;
 struct sst_module;
 struct sst_module_runtime;
 extern struct sst_ops haswell_ops;
-extern struct sst_ops sst_baytrail_ops;
+extern struct sst_ops sst_byt_ops;
 
 /* Stream Allocate Path ID */
 enum sst_hsw_stream_path_id {

@@ -364,3 +364,6 @@ struct sst_ops sst_byt_ops = {
 	.free = sst_byt_free,
 	.parse_fw = sst_byt_parse_fw_image,
 };
+EXPORT_SYMBOL_GPL(sst_byt_ops);
+
+MODULE_LICENSE("GPL v2");

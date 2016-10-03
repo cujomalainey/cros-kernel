@@ -52,12 +52,19 @@ config SND_SOC_INTEL_HASWELL
 config SND_SOC_INTEL_BAYTRAIL
 	tristate
 
+config SND_SOC_INTEL_HASWELL_DSP
+	tristate
+
+config SND_SOC_INTEL_BAYTRAIL_DSP
+	tristate
+
 config SND_SOC_INTEL_HASWELL_MACH
 	tristate "ASoC Audio DSP support for Intel Haswell Lynxpoint"
 	depends on X86_INTEL_LPSS && I2C && I2C_DESIGNWARE_PLATFORM
 	depends on DW_DMAC_CORE
 	select SND_SOC_INTEL_SST
 	select SND_SOC_INTEL_HASWELL
+	select SND_SOC_INTEL_HASWELL_DSP
 	select SND_SOC_RT5640
 	help
 	  This adds support for the Lynxpoint Audio DSP on Intel(R) Haswell
@@ -103,6 +110,7 @@ config SND_SOC_INTEL_BYT_RT5640_MACH
 	select SND_SOC_INTEL_SST
 	select SND_SOC_INTEL_SST_FIRMWARE
 	select SND_SOC_INTEL_BAYTRAIL
+	select SND_SOC_INTEL_BAYTRAIL_DSP
 	select SND_SOC_RT5640
 	help
 	  This adds audio driver for Intel Baytrail platform based boards
@@ -126,6 +134,7 @@ config SND_SOC_INTEL_BYT_MAX98090_MACH
 	select SND_SOC_INTEL_SST
 	select SND_SOC_INTEL_SST_FIRMWARE
 	select SND_SOC_INTEL_BAYTRAIL
+	select SND_SOC_INTEL_BAYTRAIL_DSP
 	select SND_SOC_MAX98090
 	help
 	  This adds audio driver for Intel Baytrail platform based boards

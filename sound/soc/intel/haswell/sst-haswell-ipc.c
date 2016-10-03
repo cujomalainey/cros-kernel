@@ -2508,7 +2508,7 @@ static struct sst_dsp_device hsw_dev = {
 
 static struct sst_dsp_device byt_dev = {
 	.thread = byt_irq_thread,
-	.ops = &sst_baytrail_ops,
+	.ops = &sst_byt_ops,
 };
 
 static void hsw_tx_msg(struct sst_generic_ipc *ipc, struct ipc_message *msg)
