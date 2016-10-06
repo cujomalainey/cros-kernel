@@ -176,7 +176,7 @@ static void sst_byt_dump_shim(struct sst_dsp *sst)
 	}
 }
 
-static irqreturn_t sst_byt_irq(int irq, void *context)
+static irqreturn_t sst_byt_irq0(int irq, void *context)
 {
 	struct sst_dsp *sst = (struct sst_dsp *) context;
 	u64 isrx;
@@ -201,6 +201,40 @@ static irqreturn_t sst_byt_irq(int irq, void *context)
 
 	spin_unlock(&sst->spinlock);
 
+	return ret;
+}
+
+static irqreturn_t sst_byt_irq1(int irq, void *context)
+{
+	struct sst_dsp *sst = (struct sst_dsp *) context;
+	u64 isr;
+	int ret = IRQ_NONE;
+
+	spin_lock(&sst->spinlock);
+
+	/* Interrupt arrived, check src */
+	isr = sst_dsp_shim_read64_unlocked(sst, SST_ISRX);
+	if (isr & SST_ISRX_DONE) {
+		//trace_sst_irq_done(isr,
+		//	sst_dsp_shim_read_unlocked(sst, SST_IMRX));
+
+		/* Mask Done interrupt before return */
+		sst_dsp_shim_update_bits64_unlocked(sst, SST_IMRX,
+			SST_IMRX_DONE, SST_IMRX_DONE);
+		ret = IRQ_WAKE_THREAD;
+	}
+
+	if (isr & SST_ISRX_BUSY) {
+		//trace_sst_irq_busy(isr,
+		//	sst_dsp_shim_read_unlocked(sst, SST_IMRX));
+
+		/* Mask Busy interrupt before return */
+		sst_dsp_shim_update_bits64_unlocked(sst, SST_IMRX,
+			SST_IMRX_BUSY, SST_IMRX_BUSY);
+		ret = IRQ_WAKE_THREAD;
+	}
+
+	spin_unlock(&sst->spinlock);
 	return ret;
 }
 
@@ -364,7 +398,7 @@ struct sst_ops sst_byt_ops = {
 	.read64 = sst_shim32_read64,
 	.ram_read = sst_memcpy_fromio_32,
 	.ram_write = sst_memcpy_toio_32,
-	.irq_handler = sst_byt_irq,
+	.irq_handler = sst_byt_irq1,
 	.init = sst_byt_init,
 	.free = sst_byt_free,
 	.parse_fw = sst_byt_parse_fw_image,
