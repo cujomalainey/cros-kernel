@@ -668,6 +668,12 @@ struct sst_debugfs_map {
 	u32 size;
 };
 
+struct sst_debugfs_mappings {
+	const struct sst_debugfs_map *map;
+	u32 count;
+	u32 id;
+};
+
 static const struct sst_debugfs_map debugfs_byt[] = {
 	{"dmac0", 0x98000, 0x420},
 	{"dmac1", 0x9c000, 0x420},
@@ -681,15 +687,19 @@ static const struct sst_debugfs_map debugfs_byt[] = {
 };
 
 static const struct sst_debugfs_map debugfs_bdw[] = {
-	{"dmac0", 0x98000, 0x420},
-	{"dmac1", 0x9c000, 0x420},
-	{"ssp0", 0xa0000, 0x100},
-	{"ssp1", 0xa1000, 0x100},
-	{"ssp2", 0xa2000, 0x100},
-	{"iram", 0xc0000, 80 * 1024},
-	{"dram", 0x100000, 160 * 1024},
-	{"shim", 0x140000, 0x100},
-	{"mbox", 0x144000, 0x1000},
+	{"dmac0", 0xfe000, 0x420},
+	{"dmac1", 0xff000, 0x420},
+	{"ssp0", 0xec000, 0x100},
+	{"ssp1", 0xed000, 0x100},
+	{"iram", 0xa0000, 0x50000},
+	{"dram", 0x0, 0xa0000},
+	{"shim", 0xeb000, 0x100},
+	{"mbox", 0x49e000, 0x1000},
+};
+
+static const struct sst_debugfs_mappings debugfs_map[] = {
+	{debugfs_byt, ARRAY_SIZE(debugfs_byt), SST_DEV_ID_BYT},
+	{debugfs_bdw, ARRAY_SIZE(debugfs_bdw), SST_DEV_ID_WILDCAT_POINT},
 };
 
 #define DMA_TRACE_PAGE_NUMBER 4
@@ -732,15 +742,28 @@ static int hsw_debugfs_init(struct sst_hsw *hsw)
 {
 	struct sst_dsp *sst = hsw->dsp;
 	struct sst_pdata *pdata = sst->pdata;
-	int err = 0, i;
+	int err = 0, i, count;
 	struct dentry *d;
+	const struct sst_debugfs_map *map;
 
-	for (i = 0; i < ARRAY_SIZE(debugfs_byt); i++) {
+	for (i = 0; i < ARRAY_SIZE(debugfs_map); i++) {
+		if (hsw->dsp->id == debugfs_map[i].id) {
+			map = debugfs_map[i].map;
+			count = debugfs_map[i].count;
+			goto found;
+		}
+	}
+
+	dev_err(hsw->dev, "cant map debugFS for id 0x%x\n", hsw->dsp->id);
+	return 0;
+
+found:
+	for (i = 0; i < count; i++) {
 		err = hsw_debugfs_entry_create(sst,
-			(void __iomem *)((char *)sst->addr.lpe + debugfs_byt[i].offset),
-			debugfs_byt[i].size, debugfs_byt[i].name);
+			(void __iomem *)((char *)sst->addr.lpe + map[i].offset),
+			map[i].size, map[i].name);
 		if (err < 0)
-			dev_err(sst->dev, "cannot create debugfs for %s\n", debugfs_byt[i].name);
+			dev_err(sst->dev, "cannot create debugfs for %s\n", map[i].name);
 	}
 
 	INIT_LIST_HEAD(&hsw->host_buffer.elem_list);
