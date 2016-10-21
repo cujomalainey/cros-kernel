@@ -470,13 +470,6 @@ struct sst_dfsentry {
 	struct sst_dsp *sst;
 };
 
-static int sst_dfsentry_open(struct inode *inode, struct file *file)
-{
-	file->private_data = inode->i_private;
-
-	return 0;
-}
-
 static ssize_t sst_dfsentry_read(struct file *file, char __user *buffer,
 				 size_t count, loff_t *ppos)
 {
@@ -520,7 +513,7 @@ static ssize_t sst_dfsentry_read(struct file *file, char __user *buffer,
 }
 
 static const struct file_operations sst_dfs_fops = {
-	.open = sst_dfsentry_open,
+	.open = simple_open,
 	.read = sst_dfsentry_read,
 	.llseek = default_llseek,
 };
