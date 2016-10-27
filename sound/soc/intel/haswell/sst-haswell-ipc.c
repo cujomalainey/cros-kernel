@@ -804,7 +804,7 @@ static void hsw_fw_ready(struct sst_hsw *hsw, u32 header)
 	struct sst_hsw_ipc_fw_ready fw_ready;
 	u32 offset;
 	u8 fw_info[IPC_MAX_MAILBOX_BYTES - 5 * sizeof(u32)];
-	char *tmp[5], *pinfo;
+	char *tmp[5], *pinfo, sep_char;
 	int i = 0;
 
 	offset = (header & 0x1FFFFFFF) << 3;
@@ -833,10 +833,15 @@ static void hsw_fw_ready(struct sst_hsw *hsw, u32 header)
 		/* log the FW version info got from the mailbox here. */
 		memcpy(fw_info, fw_ready.fw_info, fw_ready.fw_info_size);
 		pinfo = &fw_info[0];
-		tmp[0] = strsep(&pinfo, " ");
-		tmp[1] = strsep(&pinfo, ".");
-		for (i = 2; i < ARRAY_SIZE(tmp); i++)
-			tmp[i] = strsep(&pinfo, "-");
+		if (!strncmp(pinfo, "Reef", 4)) {
+			/* git version style, 'REEF m.n-b-gx' */
+			tmp[i++] = strsep(&pinfo, " ");
+			tmp[i++] = strsep(&pinfo, ".");
+			sep_char = '-';
+		} else
+			sep_char = ' ';
+		for (; i < ARRAY_SIZE(tmp); i++)
+			tmp[i] = strsep(&pinfo, &sep_char);
 		dev_info(hsw->dev, "FW loaded, mailbox readback FW info: type %s, - "
 			"version: %s.%s, build %s, source commit id: %s\n",
 			tmp[0], tmp[1], tmp[2], tmp[3], tmp[4]);
