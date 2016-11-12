@@ -108,8 +108,9 @@ static int ipc_tx_message(struct sst_generic_ipc *ipc, u64 header,
 		ipc->ops.tx_data_copy(msg, tx_data, tx_bytes);
 
 	list_add_tail(&msg->list, &ipc->tx_list);
-	schedule_work(&ipc->kwork);
 	spin_unlock_irqrestore(&ipc->dsp->spinlock, flags);
+
+	schedule_work(&ipc->work);
 
 	if (wait)
 		return tx_wait_done(ipc, msg, rx_data);
@@ -157,7 +158,7 @@ free_mem:
 static void ipc_tx_msgs(struct work_struct *work)
 {
 	struct sst_generic_ipc *ipc =
-		container_of(work, struct sst_generic_ipc, kwork);
+		container_of(work, struct sst_generic_ipc, work);
 	struct ipc_message *msg;
 
 	spin_lock_irq(&ipc->dsp->spinlock);
@@ -275,7 +276,7 @@ int sst_ipc_init(struct sst_generic_ipc *ipc)
 	if (ret < 0)
 		return -ENOMEM;
 
-	INIT_WORK(&ipc->kwork, ipc_tx_msgs);
+	INIT_WORK(&ipc->work, ipc_tx_msgs);
 	return 0;
 }
 EXPORT_SYMBOL_GPL(sst_ipc_init);
@@ -284,7 +285,7 @@ void sst_ipc_fini(struct sst_generic_ipc *ipc)
 {
 	int i;
 
-	cancel_work_sync(&ipc->kwork);
+	flush_work(&ipc->work);
 
 	if (ipc->msg) {
 		for (i = 0; i < IPC_EMPTY_LIST_SIZE; i++) {

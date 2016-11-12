@@ -1196,7 +1196,7 @@ static irqreturn_t hsw_irq_thread(int irq, void *context)
 	spin_unlock_irqrestore(&sst->spinlock, flags);
 
 	/* continue to send any remaining messages... */
-	schedule_work(&ipc->kwork);
+	schedule_work(&ipc->work);
 
 	return IRQ_HANDLED;
 }
@@ -1248,7 +1248,7 @@ static irqreturn_t byt_irq_thread(int irq, void *context)
 	spin_unlock_irqrestore(&sst->spinlock, flags);
 
 	/* continue to send any remaining messages... */
-	queue_kthread_work(&ipc->kworker, &ipc->kwork);
+	schedule_work(&ipc->work);
 
 	return IRQ_HANDLED;
 }
@@ -2568,7 +2568,7 @@ static void hsw_shim_dbg(struct sst_generic_ipc *ipc, const char *text)
 		text, ipcx, ipcd, imrx, imrd, isrx, isrd);
 
 	for (i = 0; i < 0xff; i+=8 ) {
-		dev_err(ipc->dev, "shim 0x%2.2x value 0x%16.16llx\n",i, 
+		dev_err(ipc->dev, "shim 0x%2.2x value 0x%16.16llx\n",i,
 			sst_dsp_shim_read64_unlocked(sst, i));
 	}
 
@@ -2614,7 +2614,7 @@ static void byt_shim_dbg(struct sst_generic_ipc *ipc, const char *text)
 		text, ipcx, ipcd, imrx, imrd, isrx, isrd);
 
 	for (i = 0; i < 0xff; i+=8 ) {
-		dev_err(ipc->dev, "shim 0x%2.2x value 0x%16.16llx\n",i, 
+		dev_err(ipc->dev, "shim 0x%2.2x value 0x%16.16llx\n",i,
 			sst_dsp_shim_read64_unlocked(sst, i));
 	}
 

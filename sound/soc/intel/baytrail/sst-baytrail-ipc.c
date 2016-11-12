@@ -337,7 +337,7 @@ static irqreturn_t sst_byt_irq_thread(int irq, void *context)
 	spin_unlock_irqrestore(&sst->spinlock, flags);
 
 	/* continue to send any remaining messages... */
-	schedule_work(&ipc->kwork);
+	schedule_work(&ipc->work);
 
 	return IRQ_HANDLED;
 }
