@@ -223,7 +223,7 @@ static struct sst_acpi_desc sst_acpi_broadwell_desc = {
 	.have_rtd3 = true,
 };
 
-#if !IS_ENABLED(CONFIG_SND_SST_IPC_ACPI)
+//#if !IS_ENABLED(CONFIG_SND_SST_IPC_ACPI)
 static struct sst_acpi_mach baytrail_machines[] = {
 	{ "10EC5640", "byt-rt5640", "intel/reef-byt.ri" },
 	{ "10EC5651", "byt-rt5651", "intel/reef-byt.ri" },
@@ -242,14 +242,14 @@ static struct sst_acpi_desc sst_acpi_baytrail_desc = {
 	.resindex_dma_base = -1,
 	.have_rtd3 = false,
 };
-#endif
+//#endif
 
 static const struct acpi_device_id sst_acpi_match[] = {
 	{ "INT33C8", (unsigned long)&sst_acpi_haswell_desc },
 	{ "INT3438", (unsigned long)&sst_acpi_broadwell_desc },
-#if !IS_ENABLED(CONFIG_SND_SST_IPC_ACPI)
+//#if !IS_ENABLED(CONFIG_SND_SST_IPC_ACPI)
 	{ "80860F28", (unsigned long)&sst_acpi_baytrail_desc },
-#endif
+//#endif
 	{ }
 };
 MODULE_DEVICE_TABLE(acpi, sst_acpi_match);
