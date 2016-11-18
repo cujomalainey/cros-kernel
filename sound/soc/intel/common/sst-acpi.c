@@ -90,6 +90,7 @@ static int sst_acpi_probe(struct platform_device *pdev)
 	struct sst_acpi_mach *mach;
 	struct sst_acpi_desc *desc;
 	struct resource *mmio;
+	struct sst_acpi_mach reef_blind;
 	int ret = 0;
 
 	sst_acpi = devm_kzalloc(dev, sizeof(*sst_acpi), GFP_KERNEL);
@@ -103,8 +104,10 @@ static int sst_acpi_probe(struct platform_device *pdev)
 	desc = (struct sst_acpi_desc *)id->driver_data;
 	mach = sst_acpi_find_machine(desc->machines);
 	if (mach == NULL) {
-		dev_err(dev, "No matching ASoC machine driver found\n");
-		return -ENODEV;
+		dev_err(dev, "No matching ASoC machine driver found - using blind\n");
+		reef_blind.drv_name = "reef-blind";
+		reef_blind.fw_filename = "intel/reef-byt.ri";
+		mach = &reef_blind;
 	}
 
 	sst_pdata = &sst_acpi->sst_pdata;

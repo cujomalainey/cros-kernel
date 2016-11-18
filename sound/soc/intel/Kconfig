@@ -245,6 +245,11 @@ config SND_SOC_INTEL_SKYLAKE
 	select SND_SOC_TOPOLOGY
 	select SND_SOC_INTEL_SST
 
+config SND_SOC_INTEL_REEF_BLIND
+	tristate "Generic Blind driver that does not need codec"
+	help
+	  Add support for a blind backend with no codecs.
+
 config SND_SOC_INTEL_SKL_RT286_MACH
 	tristate "ASoC Audio driver for SKL with RT286 I2S mode"
 	depends on X86 && ACPI && I2C
