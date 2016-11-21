@@ -682,12 +682,12 @@ static const struct sst_debugfs_map debugfs_byt[] = {
 static const struct sst_debugfs_map debugfs_bdw[] = {
 	{"dmac0", 0xfe000, 0x420},
 	{"dmac1", 0xff000, 0x420},
-	{"ssp0", 0xec000, 0x100},
-	{"ssp1", 0xed000, 0x100},
+	{"ssp0", 0xfc000, 0x100},
+	{"ssp1", 0xfd000, 0x100},
 	{"iram", 0xa0000, 0x50000},
 	{"dram", 0x0, 0xa0000},
-	{"shim", 0xeb000, 0x100},
-	{"mbox", 0x49e000, 0x1000},
+	{"shim", 0xfb000, 0x100},
+	{"mbox", 0x9e000, 0x1000},
 };
 
 static const struct sst_debugfs_mappings debugfs_map[] = {
