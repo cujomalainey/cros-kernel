@@ -161,6 +161,7 @@ static int byt_rt5640_init(struct snd_soc_pcm_runtime *runtime)
 	const struct snd_soc_dapm_route *custom_map;
 	int num_routes, ret;
 
+	snd_soc_set_dmi_name(card, NULL);
 	card->dapm.idle_bias_off = true;
 
 	ret = snd_soc_add_card_controls(card, byt_rt5640_controls,

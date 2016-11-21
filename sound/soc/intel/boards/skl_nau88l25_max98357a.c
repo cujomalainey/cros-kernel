@@ -183,6 +183,8 @@ static int skylake_nau8825_codec_init(struct snd_soc_pcm_runtime *rtd)
 	int ret;
 	struct snd_soc_codec *codec = rtd->codec;
 
+	snd_soc_set_dmi_name(rtd->card, NULL);
+
 	/*
 	 * Headset buttons map to the google Reference headset.
 	 * These can be configured by userspace.

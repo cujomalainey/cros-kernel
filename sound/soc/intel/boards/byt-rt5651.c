@@ -160,6 +160,8 @@ static int byt_rt5651_init(struct snd_soc_pcm_runtime *runtime)
 	struct sst_pdata *pdata = dev_get_platdata(runtime->platform->dev);
 	struct sst_hsw *byt = pdata->dsp;
 
+	snd_soc_set_dmi_name(card, NULL);
+
 	card->dapm.idle_bias_off = true;
 
 	ret = snd_soc_add_card_controls(card, byt_rt5651_controls,

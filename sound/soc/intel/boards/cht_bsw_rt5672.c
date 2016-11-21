@@ -170,6 +170,8 @@ static int cht_codec_init(struct snd_soc_pcm_runtime *runtime)
 	struct snd_soc_dai *codec_dai = runtime->codec_dai;
 	struct snd_soc_codec *codec = codec_dai->codec;
 
+	snd_soc_set_dmi_name(card, NULL);
+
 	/* TDM 4 slots 24 bit, set Rx & Tx bitmask to 4 active slots */
 	ret = snd_soc_dai_set_tdm_slot(codec_dai, 0xF, 0xF, 4, 24);
 	if (ret < 0) {

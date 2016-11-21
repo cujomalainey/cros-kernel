@@ -127,6 +127,9 @@ static int cht_codec_init(struct snd_soc_pcm_runtime *runtime)
 	int jack_type;
 	struct cht_mc_private *ctx = snd_soc_card_get_drvdata(runtime->card);
 	struct snd_soc_jack *jack = &ctx->jack;
+	struct snd_soc_card *card = runtime->card;
+
+	snd_soc_set_dmi_name(card, NULL);
 
 	/**
 	* TI supports 4 butons headset detection

@@ -88,6 +88,7 @@ static int byt_max98090_init(struct snd_soc_pcm_runtime *runtime)
 	struct byt_max98090_private *drv = snd_soc_card_get_drvdata(card);
 	struct snd_soc_jack *jack = &drv->jack;
 
+	snd_soc_set_dmi_name(card, NULL);
 	card->dapm.idle_bias_off = true;
 
 	ret = snd_soc_dai_set_sysclk(runtime->codec_dai,

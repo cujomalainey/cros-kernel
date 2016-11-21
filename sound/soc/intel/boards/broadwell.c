@@ -80,6 +80,9 @@ static int broadwell_rt286_codec_init(struct snd_soc_pcm_runtime *rtd)
 {
 	struct snd_soc_codec *codec = rtd->codec;
 	int ret = 0;
+
+	snd_soc_set_dmi_name(rtd->card, NULL);
+
 	ret = snd_soc_card_jack_new(rtd->card, "Headset",
 		SND_JACK_HEADSET | SND_JACK_BTN_0, &broadwell_headset,
 		broadwell_headset_pins, ARRAY_SIZE(broadwell_headset_pins));

@@ -185,6 +185,8 @@ static int bdw_rt5677_init(struct snd_soc_pcm_runtime *rtd)
 	struct snd_soc_codec *codec = rtd->codec;
 	struct snd_soc_dapm_context *dapm = snd_soc_codec_get_dapm(codec);
 
+	snd_soc_set_dmi_name(rtd->card, NULL);
+
 	/* Enable codec ASRC function for Stereo DAC/Stereo1 ADC/DMIC/I2S1.
 	 * The ASRC clock source is clk_i2s1_asrc.
 	 */

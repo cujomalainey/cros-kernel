@@ -401,6 +401,7 @@ static int byt_rt5640_init(struct snd_soc_pcm_runtime *runtime)
 	struct byt_rt5640_private *priv = snd_soc_card_get_drvdata(card);
 	int num_routes;
 
+	snd_soc_set_dmi_name(card, NULL);
 	card->dapm.idle_bias_off = true;
 
 	rt5640_sel_asrc_clk_src(codec,

@@ -89,7 +89,10 @@ static int haswell_rtd_init(struct snd_soc_pcm_runtime *rtd)
 {
 	struct sst_pdata *pdata = dev_get_platdata(rtd->platform->dev);
 	struct sst_hsw *haswell = pdata->dsp;
+	struct snd_soc_card *card = rtd->card;
 	int ret;
+
+	snd_soc_set_dmi_name(card, NULL);
 
 	/* Set ADSP SSP port settings */
 	ret = sst_hsw_device_set_config(haswell, SST_HSW_DEVICE_SSP_0,

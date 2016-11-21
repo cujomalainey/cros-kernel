@@ -193,6 +193,8 @@ static int cht_codec_init(struct snd_soc_pcm_runtime *runtime)
 	struct snd_soc_dai *codec_dai = runtime->codec_dai;
 	struct cht_mc_private *ctx = snd_soc_card_get_drvdata(runtime->card);
 
+	snd_soc_set_dmi_name(card, NULL);
+
 	/* Select clk_i2s1_asrc as ASRC clock source */
 	rt5645_sel_asrc_clk_src(codec,
 				RT5645_DA_STEREO_FILTER |

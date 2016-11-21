@@ -292,6 +292,8 @@ static int skylake_nau8825_fe_init(struct snd_soc_pcm_runtime *rtd)
 	struct snd_soc_dapm_context *dapm;
 	struct snd_soc_component *component = rtd->cpu_dai->component;
 
+	snd_soc_set_dmi_name(rtd->card, NULL);
+
 	dapm = snd_soc_component_get_dapm(component);
 	snd_soc_dapm_ignore_suspend(dapm, "Reference Capture");
 

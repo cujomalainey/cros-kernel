@@ -243,6 +243,8 @@ static int mfld_init(struct snd_soc_pcm_runtime *runtime)
 	struct snd_soc_dapm_context *dapm = &runtime->card->dapm;
 	int ret_val;
 
+	snd_soc_set_dmi_name(runtime->card, NULL);
+
 	/* default is earpiece pin, userspace sets it explcitly */
 	snd_soc_dapm_disable_pin(dapm, "Headphones");
 	/* default is lineout NC, userspace sets it explcitly */
