@@ -34,6 +34,7 @@
 #include <linux/ctype.h>
 #include <linux/slab.h>
 #include <linux/of.h>
+#include <linux/dmi.h>
 #include <sound/core.h>
 #include <sound/jack.h>
 #include <sound/pcm.h>
@@ -1839,6 +1840,57 @@ int snd_soc_runtime_set_dai_fmt(struct snd_soc_pcm_runtime *rtd,
 	return 0;
 }
 EXPORT_SYMBOL_GPL(snd_soc_runtime_set_dai_fmt);
+
+/* retrieve the last word of shortname or longname */
+static const char *retrieve_id_from_card_name(const char *name)
+{
+	const char *spos = name;
+
+	while (*name) {
+		if (isspace(*name) && isalnum(name[1]))
+			spos = name + 1;
+		name++;
+	}
+	return spos;
+}
+
+/**
+ * snd_soc_set_dmi_name() - Register DMI names to card
+ * @card: The card to register DMI names
+ * @flavour: The flavour "differentiator" for the card amongst its peers.
+ *
+ * Returns 0 on success, otherwise a negative error code.
+ */
+int snd_soc_set_dmi_name(struct snd_soc_card *card, const char *flavour)
+{
+	const char *board;
+
+	board = dmi_get_system_info(DMI_BOARD_NAME);
+	if (!board)
+		board = dmi_get_system_info(DMI_PRODUCT_NAME);
+	if (!board) {
+		/* fall back to using legacy name */
+		dev_err(card->dev, "ASoC: the board/product name is empty!\n");
+		return -EINVAL;
+	}
+
+	/* card driver name */
+	card->driver_name = card->name;
+
+	/* card short name */
+	card->name = board;
+
+	/* longname is card ID-flavour */
+	if (flavour) {
+		snprintf(card->dmi_longname, sizeof(card->snd_card->longname),
+			"%s-%s", retrieve_id_from_card_name(board), flavour);
+		card->long_name = card->dmi_longname;
+	}
+
+	return 0;
+}
+EXPORT_SYMBOL_GPL(snd_soc_set_dmi_name);
+
 
 static int snd_soc_instantiate_card(struct snd_soc_card *card)
 {
