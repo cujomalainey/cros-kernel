@@ -46,8 +46,8 @@ static const struct snd_soc_dapm_route byt_rt5640_audio_map[] = {
 	{"Speaker", NULL, "SPORN"},
 
 	/* CODEC BE connections */
-	{"SSP2 CODEC IN", NULL, "AIF1 Capture"},
-	{"AIF1 Playback", NULL, "SSP2 CODEC OUT"},
+	{"SSP CODEC IN", NULL, "AIF1 Capture"},
+	{"AIF1 Playback", NULL, "SSP CODEC OUT"},
 };
 
 static const struct snd_soc_dapm_route byt_rt5640_intmic_dmic1_map[] = {
@@ -248,7 +248,7 @@ static struct snd_soc_dai_link byt_rt5640_dais[] = {
 		.cpu_dai_name = "snd-soc-dummy-dai",
 		.platform_name = "snd-soc-dummy",
 		.no_pcm = 1,
-#if 0
+#if 1
 		.codec_dai_name = "rt5640-aif1",
 		.codec_name = "i2c-10EC5640:00",
 #else
