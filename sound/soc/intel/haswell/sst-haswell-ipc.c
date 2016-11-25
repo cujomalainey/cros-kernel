@@ -1943,7 +1943,7 @@ mod_id = 0;
 			mod_id);
 		return NULL;
 	}
-//return runtime;
+return runtime;
 	err = sst_module_runtime_alloc_blocks(runtime, offset);
 	if (err < 0) {
 		dev_err(dsp->dev, "error: failed to alloc blocks for module %d runtime\n",
