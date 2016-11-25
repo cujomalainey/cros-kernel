@@ -63,6 +63,7 @@ static int reef_blind_codec_fixup(struct snd_soc_pcm_runtime *rtd,
 
 static int reef_blind_init(struct snd_soc_pcm_runtime *runtime)
 {
+	snd_soc_set_dmi_name(runtime->card, "reef");
 	return 0;
 }
 
