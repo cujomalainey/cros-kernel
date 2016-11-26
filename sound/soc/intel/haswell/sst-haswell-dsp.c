@@ -311,7 +311,7 @@ static int hsw_set_dsp_D0(struct sst_dsp *sst)
 
 	/* Disable core clock gating (VDRTCTL2.DCLCGE = 0) */
 	reg = readl(sst->addr.pci_cfg + SST_VDRTCTL2);
-	reg &= ~(SST_VDRTCL2_DCLCGE | SST_VDRTCL2_DTCGE);
+	reg &= 0xfffff000;//~(SST_VDRTCL2_DCLCGE | SST_VDRTCL2_DTCGE);
 	writel(reg, sst->addr.pci_cfg + SST_VDRTCTL2);
 
 	/* Disable D3PG (VDRTCTL0.D3PGD = 1) */
@@ -347,16 +347,16 @@ finish:
 
 	/* Set 24MHz MCLK, prevent local clock gating, enable SSP0 clock */
 	sst_dsp_shim_update_bits_unlocked(sst, SST_CLKCTL,
-		SST_CLKCTL_MASK | SST_CLKCTL_DCPLCG | SST_CLKCTL_SCOE0,
-		SST_CLKCTL_MASK | SST_CLKCTL_DCPLCG | SST_CLKCTL_SCOE0);
+		SST_CLKCTL_MASK | SST_CLKCTL_SCOE0,
+		SST_CLKCTL_MASK | SST_CLKCTL_SCOE0);
 
 	/* Stall and reset core, set CSR */
 	hsw_reset(sst);
 
 	/* Enable core clock gating (VDRTCTL2.DCLCGE = 1), delay 50 us */
-	reg = readl(sst->addr.pci_cfg + SST_VDRTCTL2);
-	reg |= SST_VDRTCL2_DCLCGE | SST_VDRTCL2_DTCGE;
-	writel(reg, sst->addr.pci_cfg + SST_VDRTCTL2);
+	//reg = readl(sst->addr.pci_cfg + SST_VDRTCTL2);
+	//reg |= SST_VDRTCL2_DCLCGE | SST_VDRTCL2_DTCGE;
+	//writel(0, sst->addr.pci_cfg + SST_VDRTCTL2);
 
 	udelay(50);
 
@@ -371,17 +371,17 @@ finish:
 	reg |= SST_VDRTCL0_DSRAMPGE_MASK | SST_VDRTCL0_ISRAMPGE_MASK;
 	/* for D0, always enable the block(DSRAM[0]) used for FW dump */
 	//fw_dump_bit = 1 << SST_VDRTCL0_DSRAMPGE_SHIFT;
-	writel(0 /*reg & ~fw_dump_bit*/, sst->addr.pci_cfg + SST_VDRTCTL0);
+	//writel(0 /*reg & ~fw_dump_bit*/, sst->addr.pci_cfg + SST_VDRTCTL0);
 
 
 	/* disable DMA finish function for SSP0 & SSP1 */
-	sst_dsp_shim_update_bits_unlocked(sst, SST_CSR2, SST_CSR2_SDFD_SSP1,
-		SST_CSR2_SDFD_SSP1);
+	//sst_dsp_shim_update_bits_unlocked(sst, SST_CSR2, SST_CSR2_SDFD_SSP1,
+	//	SST_CSR2_SDFD_SSP1);
 
 	/* set on-demond mode on engine 0,1 for all channels */
-	sst_dsp_shim_update_bits(sst, SST_HMDC,
-			SST_HMDC_HDDA_E0_ALLCH | SST_HMDC_HDDA_E1_ALLCH,
-			SST_HMDC_HDDA_E0_ALLCH | SST_HMDC_HDDA_E1_ALLCH);
+	//sst_dsp_shim_update_bits(sst, SST_HMDC,
+	//		SST_HMDC_HDDA_E0_ALLCH | SST_HMDC_HDDA_E1_ALLCH,
+	//		SST_HMDC_HDDA_E0_ALLCH | SST_HMDC_HDDA_E1_ALLCH);
 
 	/* Enable Interrupt from both sides */
 	sst_dsp_shim_update_bits(sst, SST_IMRX, (SST_IMRX_BUSY | SST_IMRX_DONE),
@@ -392,8 +392,9 @@ finish:
 	/* clear IPC registers */
 	sst_dsp_shim_write(sst, SST_IPCX, 0x0);
 	sst_dsp_shim_write(sst, SST_IPCD, 0x0);
-	sst_dsp_shim_write(sst, 0x80, 0x6);
-	sst_dsp_shim_write(sst, 0xe0, 0x300a);
+	sst_dsp_shim_write(sst, SST_CSR2, 0x6);
+	sst_dsp_shim_write(sst, 0xe0, 0x2861); // LTR
+	sst_dsp_shim_write(sst, SST_HMDC, 0xffff);
 
 	return 0;
 }
@@ -560,9 +561,9 @@ static int hsw_block_enable(struct sst_mem_block *block)
 	udelay(10);
 
 	/* Enable core clock gating (VDRTCTL2.DCLCGE = 1), delay 50 us */
-	val = readl(sst->addr.pci_cfg + SST_VDRTCTL2);
-	val |= SST_VDRTCL2_DCLCGE;
-	writel(val, sst->addr.pci_cfg + SST_VDRTCTL2);
+	//val = readl(sst->addr.pci_cfg + SST_VDRTCTL2);
+	//val |= SST_VDRTCL2_DCLCGE;
+	//writel(val, sst->addr.pci_cfg + SST_VDRTCTL2);
 
 	udelay(50);
 
@@ -599,9 +600,9 @@ static int hsw_block_disable(struct sst_mem_block *block)
 	udelay(10);
 
 	/* Enable core clock gating (VDRTCTL2.DCLCGE = 1), delay 50 us */
-	val = readl(sst->addr.pci_cfg + SST_VDRTCTL2);
-	val |= SST_VDRTCL2_DCLCGE;
-	writel(val, sst->addr.pci_cfg + SST_VDRTCTL2);
+	//val = readl(sst->addr.pci_cfg + SST_VDRTCTL2);
+	//val |= SST_VDRTCL2_DCLCGE;
+	//writel(val, sst->addr.pci_cfg + SST_VDRTCTL2);
 
 	udelay(50);
 
