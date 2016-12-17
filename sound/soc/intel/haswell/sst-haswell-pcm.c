@@ -78,7 +78,7 @@ static const u32 volume_map[] = {
 	HSW_VOLUME_MAX >> 0,
 };
 
-#define HSW_PCM_PERIODS_MAX	64
+#define HSW_PCM_PERIODS_MAX	32
 #define HSW_PCM_PERIODS_MIN	2
 
 #define HSW_PCM_DAI_ID_SYSTEM	0
@@ -86,6 +86,9 @@ static const u32 volume_map[] = {
 #define HSW_PCM_DAI_ID_OFFLOAD1	2
 #define HSW_PCM_DAI_ID_LOOPBACK	3
 
+
+#define HSW_1MS_PERIOD_MIN	(192 * 16)
+#define HSW_1MS_PERIOD_MAX	(192 * 128)
 
 static const struct snd_pcm_hardware hsw_pcm_hardware = {
 	.info			= SNDRV_PCM_INFO_MMAP |
@@ -97,11 +100,11 @@ static const struct snd_pcm_hardware hsw_pcm_hardware = {
 				  SNDRV_PCM_INFO_DRAIN_TRIGGER,
 	.formats		= SNDRV_PCM_FMTBIT_S16_LE | SNDRV_PCM_FMTBIT_S24_LE |
 				  SNDRV_PCM_FMTBIT_S32_LE,
-	.period_bytes_min	= PAGE_SIZE,
-	.period_bytes_max	= (HSW_PCM_PERIODS_MAX / HSW_PCM_PERIODS_MIN) * PAGE_SIZE,
+	.period_bytes_min	= HSW_1MS_PERIOD_MIN,
+	.period_bytes_max	= HSW_1MS_PERIOD_MAX,
 	.periods_min		= HSW_PCM_PERIODS_MIN,
 	.periods_max		= HSW_PCM_PERIODS_MAX,
-	.buffer_bytes_max	= HSW_PCM_PERIODS_MAX * PAGE_SIZE,
+	.buffer_bytes_max	= HSW_1MS_PERIOD_MAX * HSW_PCM_PERIODS_MAX,
 };
 
 struct hsw_pcm_module_map {
@@ -867,9 +870,9 @@ static int hsw_pcm_open(struct snd_pcm_substream *substream)
 	pcm_data->substream = substream;
 
 	snd_pcm_hw_constraint_step(substream->runtime, 0,
-		SNDRV_PCM_HW_PARAM_BUFFER_SIZE, PAGE_SIZE);
+		SNDRV_PCM_HW_PARAM_BUFFER_SIZE, HSW_1MS_PERIOD_MAX);
 	snd_pcm_hw_constraint_step(substream->runtime, 0,
-		SNDRV_PCM_HW_PARAM_PERIOD_SIZE, 256);
+		SNDRV_PCM_HW_PARAM_PERIOD_SIZE, 192);
 	snd_soc_set_runtime_hwparams(substream, &hsw_pcm_hardware);
 
 	pcm_data->stream = sst_hsw_stream_new(hsw, rtd->cpu_dai->id,
