@@ -87,7 +87,7 @@ static int byt_rt5651_hw_params(struct snd_pcm_substream *substream,
 	struct snd_soc_dai *codec_dai = rtd->codec_dai;
 	int ret;
 
-	snd_soc_dai_set_bclk_ratio(codec_dai, 32);
+	snd_soc_dai_set_bclk_ratio(codec_dai, 50);
 
 	ret = snd_soc_dai_set_sysclk(codec_dai, RT5651_SCLK_S_PLL1,
 				     params_rate(params) * 256 * 2,
@@ -96,13 +96,15 @@ static int byt_rt5651_hw_params(struct snd_pcm_substream *substream,
 		dev_err(codec_dai->dev, "can't set codec clock %d\n", ret);
 		return ret;
 	}
+
 	ret = snd_soc_dai_set_pll(codec_dai, 0, RT5651_PLL1_S_BCLK1,
-				  params_rate(params) * 32,
+				  params_rate(params) * 50,
 				  params_rate(params) * 256 * 2);
 	if (ret < 0) {
 		dev_err(codec_dai->dev, "can't set codec pll: %d\n", ret);
 		return ret;
 	}
+
 	return 0;
 }
 
@@ -255,7 +257,7 @@ static struct snd_soc_dai_link byt_rt5651_dais[] = {
 		.codec_dai_name = "rt5651-aif1",
 		.codec_name = "i2c-10EC5651:00",
 		.ops = &byt_rt5651_ops,
-		.dai_fmt = SND_SOC_DAIFMT_DSP_B | SND_SOC_DAIFMT_NB_NF |
+		.dai_fmt = SND_SOC_DAIFMT_I2S | SND_SOC_DAIFMT_NB_NF |
 			SND_SOC_DAIFMT_CBS_CFS,
 		.ignore_suspend = 1,
 		.be_hw_params_fixup = byt_codec_fixup,
