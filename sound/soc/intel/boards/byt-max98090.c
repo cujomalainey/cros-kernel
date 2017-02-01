@@ -67,13 +67,13 @@ static struct snd_soc_jack_pin hs_jack_pins[] = {
 
 static struct snd_soc_jack_gpio hs_jack_gpios[] = {
 	{
-		.name		= "hp-gpio",
+		.name		= "byt_max98090",
 		.idx		= 0,
 		.report		= SND_JACK_HEADPHONE | SND_JACK_LINEOUT,
 		.debounce_time	= 200,
 	},
 	{
-		.name		= "mic-gpio",
+		.name		= "byt_max98090",
 		.idx		= 1,
 		.invert		= 1,
 		.report		= SND_JACK_MICROPHONE,
