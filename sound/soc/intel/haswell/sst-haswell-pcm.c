@@ -752,6 +752,10 @@ static int hsw_pcm_trigger(struct snd_pcm_substream *substream, int cmd)
 		pos = runtime->control->appl_ptr % runtime->buffer_size;
 		sst_hsw_stream_set_old_position(hsw, pcm_data->stream, pos);
 		sst_hsw_stream_set_silence_start(hsw, sst_stream, true);
+		pos = frames_to_bytes(runtime, pos);
+		/* eos */
+		sst_hsw_stream_set_write_position(hsw, pcm_data->stream, 0, pos, 1);
+
 		break;
 	default:
 		break;
@@ -852,6 +856,30 @@ static snd_pcm_uframes_t hsw_pcm_pointer(struct snd_pcm_substream *substream)
 	return offset;
 }
 
+static int hsw_pcm_app_pointer(struct snd_pcm_substream *substream)
+{
+	struct snd_soc_pcm_runtime *rtd = substream->private_data;
+	struct snd_pcm_runtime *runtime = substream->runtime;
+	struct hsw_priv_data *pdata =
+		snd_soc_platform_get_drvdata(rtd->platform);
+	struct hsw_pcm_data *pcm_data;
+	struct sst_hsw *hsw = pdata->hsw;
+	u32 pos;
+	int dai;
+
+	dai = mod_map[rtd->cpu_dai->id].dai_id;
+	pcm_data = &pdata->pcm[dai][substream->stream];
+
+	pos = frames_to_bytes(runtime,
+		(runtime->control->appl_ptr % runtime->buffer_size));
+
+	sst_hsw_stream_set_write_position(hsw, pcm_data->stream, 0, pos, 0);
+
+	dev_vdbg(rtd->dev, "PCM: DMA app pointer %llu frames, pos %llu bytes\n",
+		runtime->control->appl_ptr, pos);
+	return 0;
+}
+
 static int hsw_pcm_open(struct snd_pcm_substream *substream)
 {
 	struct snd_soc_pcm_runtime *rtd = substream->private_data;
@@ -932,6 +960,7 @@ static const struct snd_pcm_ops hsw_pcm_ops = {
 	.trigger	= hsw_pcm_trigger,
 	.pointer	= hsw_pcm_pointer,
 	.page		= snd_pcm_sgbuf_ops_page,
+	.ack		= hsw_pcm_app_pointer,
 };
 
 static int hsw_pcm_create_modules(struct hsw_priv_data *pdata)

@@ -426,6 +426,9 @@ int sst_hsw_mixer_set_volume(struct sst_hsw *hsw, u32 stage_id, u32 channel,
 int sst_hsw_mixer_get_volume(struct sst_hsw *hsw, u32 stage_id, u32 channel,
 	u32 *volume);
 
+int sst_hsw_stream_set_write_position(struct sst_hsw *hsw,
+	struct sst_hsw_stream *stream, u32 stage_id, u32 pos, u32 eos);
+
 /* Stream API */
 struct sst_hsw_stream *sst_hsw_stream_new(struct sst_hsw *hsw, int id,
 	u32 (*get_write_position)(struct sst_hsw_stream *stream, void *data),

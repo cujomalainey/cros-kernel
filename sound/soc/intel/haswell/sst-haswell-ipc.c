@@ -1400,6 +1400,34 @@ int sst_hsw_mixer_set_volume(struct sst_hsw *hsw, u32 stage_id, u32 channel,
 	return 0;
 }
 
+/* stream app position */
+int sst_hsw_stream_set_write_position(struct sst_hsw *hsw,
+	struct sst_hsw_stream *stream, u32 stage_id, u32 pos, u32 eos)
+{
+	struct sst_hsw_ipc_stream_set_position w_pos;
+	u32 header;
+	int ret;
+
+	trace_ipc_request("set write position", stream->reply.stream_hw_id);
+
+	header = IPC_GLB_TYPE(IPC_GLB_STREAM_MESSAGE) |
+		IPC_STR_TYPE(IPC_STR_STAGE_MESSAGE);
+	header |= (stream->reply.stream_hw_id << IPC_STR_ID_SHIFT);
+	header |= (IPC_STG_SET_WRITE_POSITION << IPC_STG_TYPE_SHIFT);
+	header |= (stage_id << IPC_STG_ID_SHIFT);
+
+	stream->wpos.position = pos;
+	stream->wpos.end_of_buffer = eos;
+	ret = sst_ipc_tx_message_wait(&hsw->ipc, header, &stream->wpos,
+		sizeof(stream->wpos), NULL, 0);
+	if (ret < 0) {
+		dev_err(hsw->dev, "error: set stream write position failed\n");
+		return ret;
+	}
+
+	return 0;
+}
+
 /* Stream API */
 struct sst_hsw_stream *sst_hsw_stream_new(struct sst_hsw *hsw, int id,
 	u32 (*notify_position)(struct sst_hsw_stream *stream, void *data),
