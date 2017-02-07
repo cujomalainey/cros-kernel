@@ -484,6 +484,8 @@ int sst_hsw_stream_pause(struct sst_hsw *hsw, struct sst_hsw_stream *stream,
 	int wait);
 int sst_hsw_stream_resume(struct sst_hsw *hsw, struct sst_hsw_stream *stream,
 	int wait);
+int sst_hsw_stream_stop(struct sst_hsw *hsw, struct sst_hsw_stream *stream,
+	int wait);
 int sst_hsw_stream_reset(struct sst_hsw *hsw, struct sst_hsw_stream *stream);
 
 /* Stream pointer positions */

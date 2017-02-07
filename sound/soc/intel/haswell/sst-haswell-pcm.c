@@ -743,6 +743,9 @@ static int hsw_pcm_trigger(struct snd_pcm_substream *substream, int cmd)
 		sst_hsw_stream_resume(hsw, pcm_data->stream, 0);
 		break;
 	case SNDRV_PCM_TRIGGER_STOP:
+		sst_hsw_stream_set_silence_start(hsw, sst_stream, false);
+		sst_hsw_stream_stop(hsw, pcm_data->stream, 0);
+		break;
 	case SNDRV_PCM_TRIGGER_SUSPEND:
 	case SNDRV_PCM_TRIGGER_PAUSE_PUSH:
 		sst_hsw_stream_set_silence_start(hsw, sst_stream, false);

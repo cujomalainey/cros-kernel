@@ -164,6 +164,7 @@ enum ipc_str_operation {
 	IPC_STR_RESUME = 2,
 	IPC_STR_STAGE_MESSAGE = 3,
 	IPC_STR_NOTIFICATION = 4,
+	IPC_STR_STOP = 5,
 	IPC_STR_MAX_MESSAGE
 };
 
@@ -913,6 +914,11 @@ static void hsw_stream_update(struct sst_hsw *hsw, struct ipc_message *msg)
 	case IPC_STR_PAUSE:
 		stream->running = false;
 		trace_ipc_notification("stream paused",
+			stream->reply.stream_hw_id);
+		break;
+	case IPC_STR_STOP:
+		stream->running = false;
+		trace_ipc_notification("stream stopped",
 			stream->reply.stream_hw_id);
 		break;
 	case IPC_STR_RESUME:
@@ -1797,6 +1803,28 @@ int sst_hsw_stream_resume(struct sst_hsw *hsw, struct sst_hsw_stream *stream,
 		stream->reply.stream_hw_id, wait);
 	if (ret < 0)
 		dev_err(hsw->dev, "error: failed to resume stream %d\n",
+			stream->reply.stream_hw_id);
+
+	return ret;
+}
+
+/* Stream ALSA trigger operations */
+int sst_hsw_stream_stop(struct sst_hsw *hsw, struct sst_hsw_stream *stream,
+	int wait)
+{
+	int ret;
+
+	if (!stream) {
+		dev_warn(hsw->dev, "warning: stream is NULL, no stream to pause, ignore it.\n");
+		return 0;
+	}
+
+	trace_ipc_request("stream stop", stream->reply.stream_hw_id);
+
+	ret = sst_hsw_stream_operations(hsw, IPC_STR_STOP,
+		stream->reply.stream_hw_id, wait);
+	if (ret < 0)
+		dev_err(hsw->dev, "error: failed to stop stream %d\n",
 			stream->reply.stream_hw_id);
 
 	return ret;
