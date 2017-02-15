@@ -680,6 +680,8 @@ static int hsw_pcm_hw_params(struct snd_pcm_substream *substream,
 
 	dsp = sst_hsw_get_dsp(hsw);
 
+/* don't use runtime module for reef ATM. */
+#if 0
 	// TODO: we are not actually using the module config anymore ??
 	module_data = sst_module_get_from_id(dsp, module_id);
 	if (module_data == NULL) {
@@ -689,6 +691,7 @@ static int hsw_pcm_hw_params(struct snd_pcm_substream *substream,
 
 	sst_hsw_stream_set_module_info(hsw, pcm_data->stream,
 		pcm_data->runtime);
+#endif
 
 	ret = sst_hsw_stream_commit(hsw, pcm_data->stream);
 	if (ret < 0) {
@@ -972,6 +975,9 @@ static int hsw_pcm_create_modules(struct hsw_priv_data *pdata)
 	struct hsw_pcm_data *pcm_data;
 	int i;
 
+/* don't use runtime module for reef ATM. */
+return 0;
+
 	for (i = 0; i < ARRAY_SIZE(mod_map); i++) {
 		pcm_data = &pdata->pcm[mod_map[i].dai_id][mod_map[i].stream];
 
@@ -1008,6 +1014,9 @@ static void hsw_pcm_free_modules(struct hsw_priv_data *pdata)
 	struct sst_hsw *hsw = pdata->hsw;
 	struct hsw_pcm_data *pcm_data;
 	int i;
+
+/* don't use runtime module for reef ATM. */
+return;
 
 	for (i = 0; i < ARRAY_SIZE(mod_map); i++) {
 		pcm_data = &pdata->pcm[mod_map[i].dai_id][mod_map[i].stream];
