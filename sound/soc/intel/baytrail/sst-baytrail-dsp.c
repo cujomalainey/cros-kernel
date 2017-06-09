@@ -176,33 +176,33 @@ static void sst_byt_dump_shim(struct sst_dsp *sst)
 	}
 }
 
-static irqreturn_t sst_byt_irq0(int irq, void *context)
-{
-	struct sst_dsp *sst = (struct sst_dsp *) context;
-	u64 isrx;
-	irqreturn_t ret = IRQ_NONE;
+// static irqreturn_t sst_byt_irq0(int irq, void *context)
+// {
+// 	struct sst_dsp *sst = (struct sst_dsp *) context;
+// 	u64 isrx;
+// 	irqreturn_t ret = IRQ_NONE;
 
-	spin_lock(&sst->spinlock);
+// 	spin_lock(&sst->spinlock);
 
-	isrx = sst_dsp_shim_read64_unlocked(sst, SST_ISRX);
-	if (isrx & SST_ISRX_DONE) {
-		/* ADSP has processed the message request from IA */
-		sst_dsp_shim_update_bits64_unlocked(sst, SST_IPCX,
-						    SST_BYT_IPCX_DONE, 0);
-		ret = IRQ_WAKE_THREAD;
-	}
-	if (isrx & SST_BYT_ISRX_REQUEST) {
-		/* mask message request from ADSP and do processing later */
-		sst_dsp_shim_update_bits64_unlocked(sst, SST_IMRX,
-						    SST_BYT_IMRX_REQUEST,
-						    SST_BYT_IMRX_REQUEST);
-		ret = IRQ_WAKE_THREAD;
-	}
+// 	isrx = sst_dsp_shim_read64_unlocked(sst, SST_ISRX);
+// 	if (isrx & SST_ISRX_DONE) {
+// 		/* ADSP has processed the message request from IA */
+// 		sst_dsp_shim_update_bits64_unlocked(sst, SST_IPCX,
+// 						    SST_BYT_IPCX_DONE, 0);
+// 		ret = IRQ_WAKE_THREAD;
+// 	}
+// 	if (isrx & SST_BYT_ISRX_REQUEST) {
+// 		/* mask message request from ADSP and do processing later */
+// 		sst_dsp_shim_update_bits64_unlocked(sst, SST_IMRX,
+// 						    SST_BYT_IMRX_REQUEST,
+// 						    SST_BYT_IMRX_REQUEST);
+// 		ret = IRQ_WAKE_THREAD;
+// 	}
 
-	spin_unlock(&sst->spinlock);
+// 	spin_unlock(&sst->spinlock);
 
-	return ret;
-}
+// 	return ret;
+// }
 
 static irqreturn_t sst_byt_irq1(int irq, void *context)
 {
