@@ -1410,7 +1410,7 @@ int sst_hsw_mixer_set_volume(struct sst_hsw *hsw, u32 stage_id, u32 channel,
 int sst_hsw_stream_set_write_position(struct sst_hsw *hsw,
 	struct sst_hsw_stream *stream, u32 stage_id, u32 pos, u32 eos)
 {
-	struct sst_hsw_ipc_stream_set_position w_pos;
+	// struct sst_hsw_ipc_stream_set_position w_pos;
 	u32 header;
 	int ret;
 

@@ -307,7 +307,7 @@ static void hsw_reset(struct sst_dsp *sst)
 static int hsw_set_dsp_D0(struct sst_dsp *sst)
 {
 	int tries = 10;
-	u32 reg, fw_dump_bit;
+	u32 reg;// fw_dump_bit;
 
 	/* Disable core clock gating (VDRTCTL2.DCLCGE = 0) */
 	reg = readl(sst->addr.pci_cfg + SST_VDRTCTL2);
@@ -619,7 +619,7 @@ static int hsw_init(struct sst_dsp *sst, struct sst_pdata *pdata)
 	const struct sst_adsp_memregion *region;
 	struct device *dev;
 	int ret = -ENODEV, i, j, region_count;
-	u32 offset, size, fw_dump_bit;
+	u32 offset, size;// fw_dump_bit;
 
 	dev = sst->dma_dev;
 
