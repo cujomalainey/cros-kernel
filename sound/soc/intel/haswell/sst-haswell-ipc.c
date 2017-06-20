@@ -1424,10 +1424,10 @@ int sst_hsw_stream_set_write_position(struct sst_hsw *hsw,
 
 	stream->wpos.position = pos;
 	stream->wpos.end_of_buffer = eos;
-	ret = sst_ipc_tx_message_wait(&hsw->ipc, header, &stream->wpos,
-		sizeof(stream->wpos), NULL, 0);
+	ret = sst_ipc_tx_message_nowait(&hsw->ipc, header, &stream->wpos,
+		sizeof(stream->wpos));
 	if (ret < 0) {
-		dev_err(hsw->dev, "error: set stream write position failed\n");
+		dev_err(hsw->dev, "error: set stream write position failed: %d\n", ret);
 		return ret;
 	}
 
