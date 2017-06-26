@@ -501,11 +501,12 @@ enum snd_soc_dapm_type {
 	snd_soc_dapm_dai_link,		/* link between two DAI structures */
 	snd_soc_dapm_kcontrol,		/* Auto-disabled kcontrol */
 	snd_soc_dapm_buffer,		/* DSP/CODEC internal buffer */
-	snd_soc_dapm_pipeline,		/* DSP/CODEC internal pipeline */
+	snd_soc_dapm_scheduler,		/* DSP/CODEC internal scheduler */
 	snd_soc_dapm_effect,		/* DSP/CODEC effect component */
 	snd_soc_dapm_src,		/* DSP/CODEC SRC component */
 	snd_soc_dapm_asrc,		/* DSP/CODEC ASRC component */
-	snd_soc_dapm_codec,		/* FW/SW coder/decoder component */
+	snd_soc_dapm_encoder,		/* FW/SW encoder component */
+	snd_soc_dapm_decoder,		/* FW/SW decoder component */
 };
 
 enum snd_soc_dapm_subclass {
