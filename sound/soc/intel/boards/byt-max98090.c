@@ -84,6 +84,24 @@ static struct snd_soc_jack_gpio hs_jack_gpios[] = {
 	},
 };
 
+static int byt_codec_fixup(struct snd_soc_pcm_runtime *rtd,
+			    struct snd_pcm_hw_params *params)
+{
+	struct snd_interval *rate = hw_param_interval(params,
+			SNDRV_PCM_HW_PARAM_RATE);
+	struct snd_interval *channels = hw_param_interval(params,
+						SNDRV_PCM_HW_PARAM_CHANNELS);
+
+	/* The DSP will covert the FE rate to 48k, stereo, 16bits */
+	rate->min = rate->max = 48000;
+	channels->min = channels->max = 2;
+
+	/* set SSP2 to 16-bit */
+	params_set_format(params, SNDRV_PCM_FORMAT_S16_LE);
+	return 0;
+}
+
+
 static int byt_max98090_init(struct snd_soc_pcm_runtime *runtime)
 {
 	int ret;
@@ -135,6 +153,7 @@ static struct snd_soc_dai_link byt_max98090_dais[] = {
 		.codec_name = "i2c-193C9890:00",
 		.platform_name = "haswell-pcm-audio",
 		.init = byt_max98090_init,
+		.be_hw_params_fixup = byt_codec_fixup,
 		.dai_fmt = SND_SOC_DAIFMT_I2S | SND_SOC_DAIFMT_NB_NF |
 			   SND_SOC_DAIFMT_CBS_CFS,
 	},
