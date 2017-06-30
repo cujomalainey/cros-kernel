@@ -25,6 +25,9 @@
 #include <sound/soc.h>
 #include <sound/jack.h>
 #include "../../codecs/max98090.h"
+#include "../haswell/sst-haswell-ipc.h"
+
+#include "../common/sst-dsp.h"
 
 struct byt_max98090_private {
 	struct snd_soc_jack jack;
@@ -87,6 +90,8 @@ static int byt_max98090_init(struct snd_soc_pcm_runtime *runtime)
 	struct snd_soc_card *card = runtime->card;
 	struct byt_max98090_private *drv = snd_soc_card_get_drvdata(card);
 	struct snd_soc_jack *jack = &drv->jack;
+	struct sst_pdata *pdata = dev_get_platdata(runtime->platform->dev);
+	struct sst_hsw *dsp = pdata->dsp;
 
 	snd_soc_set_dmi_name(card, NULL);
 	card->dapm.idle_bias_off = true;
@@ -105,6 +110,16 @@ static int byt_max98090_init(struct snd_soc_pcm_runtime *runtime)
 				    hs_jack_pins, ARRAY_SIZE(hs_jack_pins));
 	if (ret)
 		return ret;
+
+	/* Set ADSP SSP port settings */
+	ret = sst_hsw_device_set_config(dsp, SST_HSW_DEVICE_SSP_2,
+		15360000,
+		SST_HSW_DEVICE_CLOCK_MASTER, 9);
+	if (ret < 0) {
+		dev_err(runtime->dev, "error: failed to set device config\n");
+		return ret;
+	}
+
 
 	return snd_soc_jack_add_gpiods(card->dev->parent, jack,
 				       ARRAY_SIZE(hs_jack_gpios),
