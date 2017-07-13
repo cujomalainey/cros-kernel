@@ -97,13 +97,23 @@ config SND_SOC_INTEL_BYT_RT5640_MACH
 	tristate "ASoC Audio driver for Intel Baytrail with RT5640 codec"
 	depends on X86_INTEL_LPSS && I2C
 	depends on DMADEVICES
-	depends on SND_SST_IPC_ACPI = n
 	select SND_SOC_INTEL_BAYTRAIL
 	select SND_SOC_RT5640
 	help
 	  This adds audio driver for Intel Baytrail platform based boards
 	  with the RT5640 audio codec. This driver is deprecated, use
 	  SND_SOC_INTEL_BYTCR_RT5640_MACH instead for better functionality.
+
+config SND_SOC_INTEL_BYT_RT5651_MACH
+	tristate "ASoC Audio driver for Intel Baytrail with RT5651 codec"
+	depends on X86_INTEL_LPSS && I2C
+	depends on DMADEVICES
+	select SND_SOC_INTEL_BAYTRAIL
+	select SND_SOC_RT5651
+	help
+	  This adds audio driver for Intel Baytrail platform based boards
+	  with the RT5651 audio codec. This driver is deprecated, use
+	  SND_SOC_INTEL_BYTCR_RT5651_MACH instead for better functionality.
 
 config SND_SOC_INTEL_BYT_MAX98090_MACH
 	tristate "ASoC Audio driver for Intel Baytrail with MAX98090 codec"
