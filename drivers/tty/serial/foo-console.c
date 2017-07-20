@@ -64,12 +64,12 @@ MODULE_LICENSE("GPL");
 
 
 static int debug;
-MODULE_PARM(debug, "i");
-MODULE_PARM_DESC(debug, "Debugging mode enabled or not");
+// MODULE_PARM(debug, int, "i");
+// MODULE_PARM_DESC(debug, "Debugging mode enabled or not");
 
 static struct timer_list *timer;
 
-static void tiny_stop_tx(struct uart_port *port, unsigned int tty_stop)
+static void tiny_stop_tx(struct uart_port *port)
 {
   dbg ();
 }
@@ -86,7 +86,7 @@ static void tiny_enable_ms(struct uart_port *port)
 
 static void tiny_tx_chars(struct uart_port *port)
 {
-  struct circ_buf *xmit = &port->info->xmit;
+  struct circ_buf *xmit = &port->state->xmit;
   int count;
 
   dbg ();
@@ -97,7 +97,7 @@ static void tiny_tx_chars(struct uart_port *port)
     return;
   }
   if (uart_circ_empty(xmit) || uart_tx_stopped(port)) {
-    tiny_stop_tx(port, 0);
+    tiny_stop_tx(port);
     return;
   }
 
@@ -111,13 +111,13 @@ static void tiny_tx_chars(struct uart_port *port)
   } while (--count > 0);
 
   if (uart_circ_chars_pending(xmit) < WAKEUP_CHARS)
-    uart_event(port, EVT_WRITE_WAKEUP);
+    uart_write_wakeup(port);
 
   if (uart_circ_empty(xmit))
-    tiny_stop_tx(port, 0);
+    tiny_stop_tx(port);
 }
 
-static void tiny_start_tx(struct uart_port *port, unsigned int tty_start)
+static void tiny_start_tx(struct uart_port *port)
 {
   dbg ();
 }
@@ -125,18 +125,16 @@ static void tiny_start_tx(struct uart_port *port, unsigned int tty_start)
 static void tiny_timer (unsigned long data)
 {
   struct uart_port *port;
-  struct tty_struct *tty;
+  struct tty_port *tty;
 
   dbg ();
 
   port = (struct uart_port *)data;
   if (!port)
     return;
-  if (!port->info)
+  if (!port->state)
     return;
-  tty = port->info->tty;
-  if (!tty)
-    return;
+  tty = &port->state->port;
 
   /* add one character to the tty port */
   /* this doesn't actually push the data through unless tty->low_latency is set */
@@ -168,52 +166,6 @@ static void tiny_set_mctrl(struct uart_port *port, unsigned int mctrl)
 
 static void tiny_break_ctl(struct uart_port *port, int break_state)
 {
-}
-
-static void
-tiny_change_speed(struct uart_port *port, unsigned int cflag,
-        unsigned int iflag, unsigned int quot)
-{
-  /* get the byte size */
-  switch (cflag & CSIZE) {
-  case CS5:
-    dbg ("data bits = 5");
-    break;
-  case CS6:
-    dbg ("data bits = 6");
-    break;
-  case CS7:
-    dbg ("data bits = 7");
-    break;
-  default: // CS8
-    dbg ("data bits = 8");
-    break;
-  }
-
-  /* determine the parity */
-  if (cflag & PARENB)
-    if (cflag & PARODD)
-      dbg (" - parity = odd\n");
-    else
-      dbg (" - parity = even\n");
-  else
-    dbg (" - parity = none\n");
-
-  /* figure out the stop bits requested */
-  if (cflag & CSTOPB)
-    dbg (" - stop bits = 2\n");
-  else
-    dbg (" - stop bits = 1\n");
-
-  /* figure out the flow control settings */
-  if (cflag & CRTSCTS)
-    dbg (" - RTS/CTS is enabled\n");
-  else
-    dbg (" - RTS/CTS is disabled\n");
-
-  /* Set baud rate */
-  //UART_PUT_DIV_LO(port, (quot & 0xff));
-  //UART_PUT_DIV_HI(port, ((quot & 0xf00) >> 8));
 }
 
 static int tiny_startup(struct uart_port *port)
@@ -278,7 +230,6 @@ static struct uart_ops tiny_ops = {
   .break_ctl  = tiny_break_ctl,
   .startup  = tiny_startup,
   .shutdown = tiny_shutdown,
-  .change_speed = tiny_change_speed,
   .type   = tiny_type,
   .release_port = tiny_release_port,
   .request_port = tiny_request_port,
