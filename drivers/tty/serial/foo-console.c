@@ -249,13 +249,8 @@ static int tty0tty_write(struct tty_struct *tty, const unsigned char *buffer, in
 
   if(ttyx != NULL)
   {
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,8,0)
     tty_insert_flip_string(ttyx->port, buffer, count);
     tty_flip_buffer_push(ttyx->port);
-#else
-    tty_insert_flip_string(ttyx, buffer, count);
-    tty_flip_buffer_push(ttyx);
-#endif
     retval=count;
   }
 
@@ -301,13 +296,8 @@ static void tty0tty_set_termios(struct tty_struct *tty, struct ktermios *old_ter
         printk(KERN_DEBUG "%s - \n", __FUNCTION__);
 #endif
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,7,0)
   cflag = tty->termios.c_cflag;
   iflag = tty->termios.c_iflag;
-#else
-  cflag = tty->termios->c_cflag;
-  iflag = tty->termios->c_iflag;
-#endif
 
   /* check that they really want us to change something */
   if (old_termios)
@@ -683,9 +673,7 @@ static int __init tty0tty_init(void)
   for(i=0;i<2*pairs;i++)
   {
     tty_port_init(&tport[i]);
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,7,0)
     tty_port_link_device(&tport[i],tty0tty_tty_driver, i);
-#endif
   }
 
   retval = tty_register_driver(tty0tty_tty_driver);
@@ -710,9 +698,7 @@ static void __exit tty0tty_exit(void)
 #endif
   for (i = 0; i < 2*pairs; ++i)
   {
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,7,0)
-                tty_port_destroy(&tport[i]);
-#endif
+    tty_port_destroy(&tport[i]);
     tty_unregister_device(tty0tty_tty_driver, i);
   }
   tty_unregister_driver(tty0tty_tty_driver);
