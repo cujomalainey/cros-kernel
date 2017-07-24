@@ -43,6 +43,7 @@
 #include <linux/sched/signal.h>
 #endif
 #include <asm/uaccess.h>
+#include <sound/gdb-dsp-tty.h>
 
 
 #define DRIVER_VERSION "v1.2"
