@@ -29,12 +29,13 @@ config SERIAL_AMBA_PL010
 
 	  If unsure, say N.
 
-config SERIAL_FOO_CONSOLE
-	bool "Console your Foo"
+config SERIAL_GDB_DSP_TTY
+	bool "Support for DSP debugging via virtual TTY port"
 	select SERIAL_CORE
 	select SERIAL_CORE_CONSOLE
 	help
-	  You don't get any
+	  Enable a virtual TTY port to that DSPs can connect to for remote debugging
+	  using gdb
 
 config SERIAL_AMBA_PL010_CONSOLE
 	bool "Support for console on AMBA serial port"
