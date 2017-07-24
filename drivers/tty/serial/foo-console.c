@@ -54,7 +54,7 @@ MODULE_AUTHOR( DRIVER_AUTHOR );
 MODULE_DESCRIPTION( DRIVER_DESC );
 MODULE_LICENSE("GPL");
 
-short pairs = 4; //Default number of pairs of devices
+short pairs = 1; //Default number of pairs of devices
 module_param(pairs, short, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
 MODULE_PARM_DESC(pairs, "Number of pairs of devices to be created, maximum of 128");
 
@@ -293,7 +293,7 @@ static void tty0tty_set_termios(struct tty_struct *tty, struct ktermios *old_ter
   unsigned int iflag;
 
 #ifdef SCULL_DEBUG
-        printk(KERN_DEBUG "%s - \n", __FUNCTION__);
+  printk(KERN_DEBUG "%s - \n", __FUNCTION__);
 #endif
 
   cflag = tty->termios.c_cflag;
@@ -631,7 +631,7 @@ static struct tty_driver *tty0tty_tty_driver;
 static int __init tty0tty_init(void)
 {
   int retval;
-        int i;
+  int i;
   if (pairs > 128) pairs = 128;
   if (pairs < 1) pairs = 1;
   tport = kmalloc(2*pairs*sizeof(struct tty_port),GFP_KERNEL);
@@ -653,12 +653,12 @@ static int __init tty0tty_init(void)
   tty0tty_tty_driver->owner = THIS_MODULE;
   tty0tty_tty_driver->driver_name = "tty0tty";
   tty0tty_tty_driver->name = "tnt";
-        /* no more devfs subsystem */
+  /* no more devfs subsystem */
   tty0tty_tty_driver->major = TTY0TTY_MAJOR;
   tty0tty_tty_driver->type = TTY_DRIVER_TYPE_SERIAL;
   tty0tty_tty_driver->subtype = SERIAL_TYPE_NORMAL;
   tty0tty_tty_driver->flags = TTY_DRIVER_RESET_TERMIOS | TTY_DRIVER_REAL_RAW ;
-        /* no more devfs subsystem */
+  /* no more devfs subsystem */
   tty0tty_tty_driver->init_termios = tty_std_termios;
   tty0tty_tty_driver->init_termios.c_iflag = 0;
   tty0tty_tty_driver->init_termios.c_oflag = 0;
@@ -694,7 +694,7 @@ static void __exit tty0tty_exit(void)
   int i;
 
 #ifdef SCULL_DEBUG
-        printk(KERN_DEBUG "%s - \n", __FUNCTION__);
+  printk(KERN_DEBUG "%s - \n", __FUNCTION__);
 #endif
   for (i = 0; i < 2*pairs; ++i)
   {
