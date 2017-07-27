@@ -75,6 +75,7 @@ MODULE_PARM_DESC(pairs, "Number of pairs of devices to be created, maximum of 12
 
 
 static struct tty_port *tport;
+static struct gdb_dsp *dsp;
 
 struct tty0tty_serial {
   struct tty_struct *tty;   /* pointer to the tty for this device */
@@ -221,43 +222,21 @@ static void tty0tty_close(struct tty_struct *tty, struct file *file)
 static int tty0tty_write(struct tty_struct *tty, const unsigned char *buffer, int count)
 {
   struct tty0tty_serial *tty0tty = tty->driver_data;
-  int retval = -EINVAL;
-  struct tty_struct  *ttyx = NULL;
 
   if (!tty0tty)
     return -ENODEV;
 
   down(&tty0tty->sem);
 
-  if (!tty0tty->open_count)
-    /* port was not opened */
-    goto exit;
-
-  if( (tty0tty->tty->index % 2) == 0)
-  {
-    if(tty0tty_table[tty0tty->tty->index+1] != NULL)
-      if (tty0tty_table[tty0tty->tty->index+1]->open_count > 0)
-        ttyx=tty0tty_table[tty0tty->tty->index+1]->tty;
-  }
-  else
-  {
-    if(tty0tty_table[tty0tty->tty->index-1] != NULL)
-      if (tty0tty_table[tty0tty->tty->index-1]->open_count > 0)
-        ttyx=tty0tty_table[tty0tty->tty->index-1]->tty;
+  if (!dsp) {
+    printk("No DSP :(\n");
+    return -ENODEV;
   }
 
-//        tty->low_latency=1;
+  dsp->ops->write(buffer, count);
 
-  if(ttyx != NULL)
-  {
-    tty_insert_flip_string(ttyx->port, buffer, count);
-    tty_flip_buffer_push(ttyx->port);
-    retval=count;
-  }
-
-exit:
   up(&tty0tty->sem);
-  return retval;
+  return count;
 }
 
 static int tty0tty_write_room(struct tty_struct *tty)
@@ -265,21 +244,14 @@ static int tty0tty_write_room(struct tty_struct *tty)
   struct tty0tty_serial *tty0tty = tty->driver_data;
   int room = -EINVAL;
 
-  if (!tty0tty)
+  if (!dsp || !dsp->ops || !dsp->ops->write_room)
     return -ENODEV;
 
   down(&tty0tty->sem);
 
-  if (!tty0tty->open_count)
-  {
-    /* port was not opened */
-    goto exit;
-  }
-
   /* calculate how much room is left in the device */
-  room = 255;
+  room = dsp->ops->write_room();
 
-exit:
   up(&tty0tty->sem);
   return room;
 }
@@ -621,7 +593,34 @@ static struct tty_operations serial_ops = {
   .ioctl = tty0tty_ioctl,
 };
 
+int register_gdb_dsp(struct gdb_dsp *new_dsp)
+{
+  if (!new_dsp)
+    return -EINVAL;
 
+  dsp = new_dsp;
+
+  printk("ttygdb: Registered %s as dbg dsp\n", dsp->name);
+  return 0;
+}
+EXPORT_SYMBOL(register_gdb_dsp);
+
+int write_gdp_dsp_debug(const unsigned char *data, int size)
+{
+  struct tty_struct  *ttyx = NULL;
+  if (!tty0tty_table || !tty0tty_table[1])
+    return -ENODEV;
+  else
+    ttyx=tty0tty_table[1]->tty;
+
+
+  if (ttyx) {
+    tty_insert_flip_string(ttyx->port, data, size);
+    tty_flip_buffer_push(ttyx->port);
+  }
+
+  return 0;
+}
 
 
 static struct tty_driver *tty0tty_tty_driver;
