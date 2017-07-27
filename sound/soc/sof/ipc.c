@@ -149,7 +149,7 @@ static int tx_wait_done(struct snd_sof_ipc *ipc, struct snd_sof_ipc_msg *msg,
 }
 
 static int ipc_tx_message(struct snd_sof_ipc *ipc, u64 header,
-	void *msg_data, size_t msg_bytes, void *reply_data, 
+	void *msg_data, size_t msg_bytes, void *reply_data,
 	size_t reply_bytes, int wait)
 {
 	struct snd_sof_dev *sdev = ipc->sdev;
@@ -175,7 +175,7 @@ static int ipc_tx_message(struct snd_sof_ipc *ipc, u64 header,
 
 	list_add_tail(&msg->list, &ipc->tx_list);
 
-	/* schedule the messgae if not busy */	
+	/* schedule the messgae if not busy */
 	if (!snd_sof_dsp_tx_busy(sdev))
 		schedule_work(&ipc->kwork);
 
@@ -429,7 +429,7 @@ struct snd_sof_ipc *snd_sof_ipc_init(struct snd_sof_dev *sdev)
 
 	ipc = devm_kzalloc(sdev->dev, sizeof(*ipc), GFP_KERNEL);
 	if (ipc == NULL)
-		return NULL; 
+		return NULL;
 
 	INIT_LIST_HEAD(&ipc->tx_list);
 	INIT_LIST_HEAD(&ipc->rx_list);
@@ -445,8 +445,8 @@ struct snd_sof_ipc *snd_sof_ipc_init(struct snd_sof_dev *sdev)
 		IPC_EMPTY_LIST_SIZE, GFP_KERNEL);
 	if (msg == NULL)
 		return NULL;
-	
-	/* pre-allocate message data */	
+
+	/* pre-allocate message data */
 	for (i = 0; i < IPC_EMPTY_LIST_SIZE; i++) {
 
 		msg->msg_data = devm_kzalloc(sdev->dev, PAGE_SIZE, GFP_KERNEL);
@@ -486,8 +486,8 @@ int snd_sof_ipc_stream_posn(struct snd_sof_dev *sdev,
 	stream.comp_id = spcm->comp_id;
 
 	/* send IPC to the DSP */
-	err = sof_ipc_tx_message_wait(sdev->ipc, 
-		stream.hdr.cmd, &stream, sizeof(stream), 
+	err = sof_ipc_tx_message_wait(sdev->ipc,
+		stream.hdr.cmd, &stream, sizeof(stream),
 		&posn, sizeof(*posn));
 	if (err < 0) {
 		dev_err(sdev->dev, "error: failed to get stream %d position\n",
@@ -526,7 +526,7 @@ int snd_sof_ipc_put_mixer(struct snd_sof_ipc *ipc,
 			sizeof(scontrol->values));
 
 		/* send IPC to the DSP */
- 		err = sof_ipc_tx_message_wait(sdev->ipc, 
+ 		err = sof_ipc_tx_message_wait(sdev->ipc,
 			values.hdr.cmd, &values, sizeof(values),
 			&reply, sizeof(reply));
 		if (err < 0) {
@@ -563,8 +563,8 @@ int snd_sof_ipc_get_mixer(struct snd_sof_ipc *ipc,
 		get.comp_id = scontrol->comp_id;
 
 		/* send IPC to the DSP */
- 		err = sof_ipc_tx_message_wait(sdev->ipc, 
-			get.hdr.cmd, &get, sizeof(get), 
+		err = sof_ipc_tx_message_wait(sdev->ipc,
+			get.hdr.cmd, &get, sizeof(get),
 			&values, sizeof(values));
 		if (err < 0) {
 			dev_err(sdev->dev, "error: failed to get control %d values\n",
