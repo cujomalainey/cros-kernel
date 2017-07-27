@@ -65,9 +65,11 @@
 #include <linux/debugfs.h>
 #include <asm/uaccess.h>
 #include <uapi/sound/sof-ipc.h>
+#include <sound/gdb-dsp-tty.h>
 #include "sof-priv.h"
 #include "ops.h"
 
+static struct gdb_dsp sof_gdb_dsp;
 
 static int sof_dfsentry_open(struct inode *inode, struct file *file)
 {
@@ -171,6 +173,8 @@ int snd_sof_dbg_init(struct snd_sof_dev *sdev)
 			dev_err(sdev->dev, "cannot create debugfs for %s\n",
 				map->name);
 	}
+	sof_gdb_dsp.prv_device = sdev;
+	register_gdb_dsp(&sof_gdb_dsp);
 
 	return err;
 }
@@ -181,3 +185,26 @@ void snd_sof_free_debug(struct snd_sof_dev *sdev)
 
 }
 EXPORT_SYMBOL(snd_sof_free_debug);
+
+static int write_gdb(struct gdb_dsp *gdev, const unsigned char *data, int size)
+{
+	struct snd_sof_dev *sdev = gdev->prv_device;
+	sof_ipc_tx_message_wait(sdev->ipc, SOF_IPC_GDB, (void*)data, size, NULL, 0);
+	return size;
+}
+
+static int ask_gdb_room(struct gdb_dsp* gdev)
+{
+	return 200;
+}
+
+static struct gdb_dsp_ops sof_ops = {
+	.write = write_gdb,
+	.write_room = ask_gdb_room,
+};
+
+static struct gdb_dsp sof_gdb_dsp = {
+	.name = "SOF DSP",
+	.ops = &sof_ops,
+	.prv_device = NULL,
+};
