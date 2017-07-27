@@ -90,6 +90,7 @@
 #define SOF_IPC_GLB_STREAM_MSG			SOF_GLB_TYPE(0x6U)
 #define SOF_IPC_FW_READY			SOF_GLB_TYPE(0x7U)
 #define SOF_IPC_GLB_DAI_MSG			SOF_GLB_TYPE(0x8U)
+#define SOF_IPC_GDB				SOF_GLB_TYPE(0x9U)
 
 /*
  * DSP Command Message Types
