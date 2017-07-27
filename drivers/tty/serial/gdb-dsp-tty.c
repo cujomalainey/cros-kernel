@@ -650,7 +650,7 @@ static int __init tty0tty_init(void)
   /* initialize the tty driver */
   tty0tty_tty_driver->owner = THIS_MODULE;
   tty0tty_tty_driver->driver_name = "tty0tty";
-  tty0tty_tty_driver->name = "tnt";
+  tty0tty_tty_driver->name = "ttygdb";
   /* no more devfs subsystem */
   tty0tty_tty_driver->major = TTY0TTY_MAJOR;
   tty0tty_tty_driver->type = TTY_DRIVER_TYPE_SERIAL;
