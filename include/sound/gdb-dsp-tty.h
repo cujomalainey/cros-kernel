@@ -6,13 +6,18 @@
  * Redistribution of this file is permitted under the terms of the GNU
  * Public License (GPL)
  */
+
 // for now assume 1 DSP active at any time, future add N dsps
 struct gdb_dsp_ops {
-  void  (*write)(const unsigned char * data, int size);
+  int (*write)(const unsigned char *data, int size);
   int (*write_room)(void);
 };
 
+struct gdb_dsp {
+  const char *name;
+  struct gdb_dsp_ops *ops;
+};
 
-void register_gdb_dsp(struct gdb_dsp_ops* dsp);
+int register_gdb_dsp(struct gdb_dsp *new_dsp);
 
-void write_gdp_dsp_debug(const unsigned char * data, int size);
+int write_gdp_dsp_debug(const unsigned char *data, int size);
