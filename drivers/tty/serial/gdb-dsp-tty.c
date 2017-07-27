@@ -405,19 +405,16 @@ static int tty0tty_tiocmget(struct tty_struct *tty)
 }
 
 
-
-
-
 //static int tty0tty_tiocmset(struct tty_struct *tty, struct file *file,
 static int tty0tty_tiocmset(struct tty_struct *tty,
-                         unsigned int set, unsigned int clear)
+                            unsigned int set, unsigned int clear)
 {
   struct tty0tty_serial *tty0tty = tty->driver_data;
   unsigned int mcr = tty0tty->mcr;
   unsigned int msr=0;
 
 #ifdef SCULL_DEBUG
-        printk(KERN_DEBUG "%s - \n", __FUNCTION__);
+  printk(KERN_DEBUG "%s - \n", __FUNCTION__);
 #endif
 
   if( (tty0tty->tty->index % 2) == 0)
@@ -482,7 +479,7 @@ static int tty0tty_tiocmset(struct tty_struct *tty,
 
 
 static int tty0tty_ioctl_tiocgserial(struct tty_struct *tty,
-                      unsigned int cmd, unsigned long arg)
+                                     unsigned int cmd, unsigned long arg)
 {
   struct tty0tty_serial *tty0tty = tty->driver_data;
 
@@ -524,7 +521,7 @@ static int tty0tty_ioctl_tiocmiwait(struct tty_struct *tty,
   struct tty0tty_serial *tty0tty = tty->driver_data;
 
 #ifdef SCULL_DEBUG
-        printk(KERN_DEBUG "%s - \n", __FUNCTION__);
+  printk(KERN_DEBUG "%s - \n", __FUNCTION__);
 #endif
   if (cmd == TIOCMIWAIT)
   {
@@ -563,12 +560,12 @@ static int tty0tty_ioctl_tiocmiwait(struct tty_struct *tty,
 }
 
 static int tty0tty_ioctl_tiocgicount(struct tty_struct *tty,
-                      unsigned int cmd, unsigned long arg)
+                                     unsigned int cmd, unsigned long arg)
 {
   struct tty0tty_serial *tty0tty = tty->driver_data;
 
 #ifdef SCULL_DEBUG
-        printk(KERN_DEBUG "%s - \n", __FUNCTION__);
+  printk(KERN_DEBUG "%s - \n", __FUNCTION__);
 #endif
   if (cmd == TIOCGICOUNT)
   {
