@@ -8,14 +8,17 @@
  */
 
 // for now assume 1 DSP active at any time, future add N dsps
+struct gdb_dsp;
+
 struct gdb_dsp_ops {
-  int (*write)(const unsigned char *data, int size);
-  int (*write_room)(void);
+  int (*write)(struct gdb_dsp *gdev, const unsigned char *data, int size);
+  int (*write_room)(struct gdb_dsp *gdev);
 };
 
 struct gdb_dsp {
   const char *name;
   struct gdb_dsp_ops *ops;
+  void *prv_device;
 };
 
 int register_gdb_dsp(struct gdb_dsp *new_dsp);

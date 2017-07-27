@@ -233,7 +233,7 @@ static int tty0tty_write(struct tty_struct *tty, const unsigned char *buffer, in
     return -ENODEV;
   }
 
-  dsp->ops->write(buffer, count);
+  dsp->ops->write(dsp, buffer, count);
 
   up(&tty0tty->sem);
   return count;
@@ -250,7 +250,7 @@ static int tty0tty_write_room(struct tty_struct *tty)
   down(&tty0tty->sem);
 
   /* calculate how much room is left in the device */
-  room = dsp->ops->write_room();
+  room = dsp->ops->write_room(dsp);
 
   up(&tty0tty->sem);
   return room;
