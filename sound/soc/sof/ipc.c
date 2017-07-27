@@ -75,7 +75,6 @@
 #include <sound/asound.h>
 #include <sound/sof.h>
 #include <uapi/sound/sof-ipc.h>
-#include <sound/gdb-dsp-tty.h>
 #include "sof-priv.h"
 #include "ops.h"
 
@@ -422,26 +421,6 @@ void snd_sof_ipc_msgs_tx(struct snd_sof_dev *sdev)
 }
 EXPORT_SYMBOL(snd_sof_ipc_msgs_tx);
 
-static int write_gdb(const unsigned char *data, int size)
-{
-	return size;
-}
-
-static int ask_gdb_room(void)
-{
-	return 200;
-}
-
-static struct gdb_dsp_ops sof_ops = {
-	.write = write_gdb,
-	.write_room = ask_gdb_room,
-};
-
-static struct gdb_dsp sof_gdb_dsp = {
-	.name = "SOF DSP",
-	.ops = &sof_ops,
-};
-
 struct snd_sof_ipc *snd_sof_ipc_init(struct snd_sof_dev *sdev)
 {
 	struct snd_sof_ipc *ipc;
@@ -482,8 +461,6 @@ struct snd_sof_ipc *snd_sof_ipc_init(struct snd_sof_dev *sdev)
 		list_add(&msg->list, &ipc->empty_list);
 		msg++;
 	}
-
-	register_gdb_dsp(&sof_gdb_dsp);
 
 	return ipc;
 }
