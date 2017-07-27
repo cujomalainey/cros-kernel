@@ -82,13 +82,14 @@
 #define SOF_CMD_TYPE(x)				(x << SOF_CMD_TYPE_SHIFT)
 
 /* Global Message Types */
-#define SOF_IPC_GLB_REPLY			SOF_GLB_TYPE(0x1)
+#define SOF_IPC_GLB_REPLY					SOF_GLB_TYPE(0x1)
 #define SOF_IPC_GLB_COMPOUND			SOF_GLB_TYPE(0x2)
 #define SOF_IPC_GLB_TPLG_MSG			SOF_GLB_TYPE(0x3)
-#define SOF_IPC_GLB_PM_MSG			SOF_GLB_TYPE(0x4)
+#define SOF_IPC_GLB_PM_MSG				SOF_GLB_TYPE(0x4)
 #define SOF_IPC_GLB_COMP_MSG			SOF_GLB_TYPE(0x5)
-#define SOF_IPC_GLB_STREAM_MSG			SOF_GLB_TYPE(0x6)
-#define SOF_IPC_FW_READY			SOF_GLB_TYPE(0x7)
+#define SOF_IPC_GLB_STREAM_MSG		SOF_GLB_TYPE(0x6)
+#define SOF_IPC_FW_READY					SOF_GLB_TYPE(0x7)
+#define SOF_IPC_GDB								SOF_GLB_TYPE(0x8)
 
 /*
  * DSP Command Message Types
