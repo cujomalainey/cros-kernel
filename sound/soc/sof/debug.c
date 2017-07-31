@@ -75,9 +75,7 @@ static struct gdb_dsp sof_gdb_dsp;
 
 struct gdb_dsp_msg {
 	struct sof_ipc_hdr hdr;
-	// uint32_t comp_id;
 	uint8_t len;
-	// use half of stack size max, alternative is to allocate this in the heap
 	unsigned char data[GDB_MSG_BUFFER_SIZE];
 } __attribute__((packed));
 
@@ -203,7 +201,6 @@ static int write_gdb(struct gdb_dsp *gdev, const unsigned char *data, int size)
 	memcpy(&msg.data, data, size);
 	msg.hdr.size = sizeof(msg);
 	msg.hdr.cmd = SOF_IPC_GDB;
-	// msg.comp_id = 0;
 	msg.len = size;
 	sof_ipc_tx_message_wait(sdev->ipc, SOF_IPC_GDB, &msg, sizeof(msg), NULL, 0);
 	return size;
