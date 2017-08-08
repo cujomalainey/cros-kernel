@@ -324,6 +324,18 @@ static void sof_ipc_notify_reply(struct snd_sof_dev *sdev, u32 msg_id)
 
 }
 
+// static void process_gdb(struct snd_sof_dev *sdev, u32 msg_id)
+// {
+// 	struct snd_sof_ipc_msg *sof_msg;
+// 	struct sof_ipc_gdb_dsp_msg *msg;
+// 	sof_msg = sof_ipc_reply_find_msg(sdev->ipc, msg_id);
+// 	if (sof_msg)
+// 	{
+// 		msg = sof_msg->msg_data;
+// 		write_tty(msg);
+// 	}
+// }
+
 void snd_sof_ipc_process_notification(struct snd_sof_dev *sdev, u32 msg_id)
 {
 	uint32_t cmd;
@@ -357,6 +369,9 @@ void snd_sof_ipc_process_notification(struct snd_sof_dev *sdev, u32 msg_id)
 	case SOF_IPC_GLB_PM_MSG:
 	case SOF_IPC_GLB_COMP_MSG:
 	case SOF_IPC_GLB_STREAM_MSG:
+	case SOF_IPC_GDB:
+		// process_gdb(sdev, msg_id);
+		break;
 	default:
 		dev_err(sdev->dev, "unknown DSP notification 0x%x\n", cmd);
 		break;

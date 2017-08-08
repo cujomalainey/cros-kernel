@@ -727,4 +727,12 @@ struct sof_ipc_window {
 	struct sof_ipc_window_elem window[];
 }  __attribute__((packed));
 
+#define GDB_MSG_BUFFER_SIZE 16
+struct sof_ipc_gdb_dsp_msg {
+	struct sof_ipc_hdr hdr;
+	uint8_t len;
+	unsigned char data[GDB_MSG_BUFFER_SIZE];
+} __attribute__((packed));
+
+void write_tty(struct sof_ipc_gdb_dsp_msg *msg);
 #endif
