@@ -369,6 +369,18 @@ static void ipc_stream_message(struct snd_sof_dev *sdev, u32 msg_id)
 	}
 }
 
+// static void process_gdb(struct snd_sof_dev *sdev, u32 msg_id)
+// {
+// 	struct snd_sof_ipc_msg *sof_msg;
+// 	struct sof_ipc_gdb_dsp_msg *msg;
+// 	sof_msg = sof_ipc_reply_find_msg(sdev->ipc, msg_id);
+// 	if (sof_msg)
+// 	{
+// 		msg = sof_msg->msg_data;
+// 		write_tty(msg);
+// 	}
+// }
+
 /* DSP firmware has sent host a message */
 void snd_sof_ipc_msgs_rx(struct snd_sof_dev *sdev, u32 msg_id)
 {
@@ -407,6 +419,8 @@ void snd_sof_ipc_msgs_rx(struct snd_sof_dev *sdev, u32 msg_id)
 		break;
 	case SOF_IPC_GLB_STREAM_MSG:
 		ipc_stream_message(sdev, type);
+	case SOF_IPC_GDB:
+		// process_gdb(sdev, msg_id);
 		break;
 	default:
 		dev_err(sdev->dev, "unknown DSP message 0x%x\n", cmd);

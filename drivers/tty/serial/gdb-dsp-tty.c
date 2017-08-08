@@ -121,7 +121,7 @@ static int tty0tty_open(struct tty_struct *tty, struct file *file)
 
     sema_init(&tty0tty->sem,1);
     tty0tty->open_count = 0;
-
+    printk("ttygdb: storing at in index %d\n", index);
     tty0tty_table[index] = tty0tty;
 
   }
@@ -222,10 +222,10 @@ static void tty0tty_close(struct tty_struct *tty, struct file *file)
 static int tty0tty_write(struct tty_struct *tty, const unsigned char *buffer, int count)
 {
   struct tty0tty_serial *tty0tty = tty->driver_data;
-
+  int room = dsp->ops->write_room(dsp);
+  int amount = room < count ? room : count;
   if (!tty0tty)
     return -ENODEV;
-
   down(&tty0tty->sem);
 
   if (!dsp) {
@@ -233,10 +233,10 @@ static int tty0tty_write(struct tty_struct *tty, const unsigned char *buffer, in
     return -ENODEV;
   }
 
-  dsp->ops->write(dsp, buffer, count);
+  dsp->ops->write(dsp, buffer, amount);
 
   up(&tty0tty->sem);
-  return count;
+  return amount;
 }
 
 static int tty0tty_write_room(struct tty_struct *tty)
@@ -253,7 +253,7 @@ static int tty0tty_write_room(struct tty_struct *tty)
   room = dsp->ops->write_room(dsp);
 
   up(&tty0tty->sem);
-  return room;
+  return 20;
 }
 
 
@@ -608,10 +608,10 @@ EXPORT_SYMBOL(register_gdb_dsp);
 int write_gdp_dsp_debug(const unsigned char *data, int size)
 {
   struct tty_struct  *ttyx = NULL;
-  if (!tty0tty_table || !tty0tty_table[1])
+  if (!tty0tty_table || !tty0tty_table[0])
     return -ENODEV;
   else
-    ttyx=tty0tty_table[1]->tty;
+    ttyx=tty0tty_table[0]->tty;
 
 
   if (ttyx) {
@@ -621,6 +621,7 @@ int write_gdp_dsp_debug(const unsigned char *data, int size)
 
   return 0;
 }
+EXPORT_SYMBOL(write_gdp_dsp_debug);
 
 
 static struct tty_driver *tty0tty_tty_driver;
