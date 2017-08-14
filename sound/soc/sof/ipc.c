@@ -318,17 +318,12 @@ static void ipc_period_elapsed(struct snd_sof_dev *sdev, u32 msg_id)
 	snd_pcm_period_elapsed(spcm->substream);
 }
 
-// static void process_gdb(struct snd_sof_dev *sdev, u32 msg_id)
-// {
-// 	struct snd_sof_ipc_msg *sof_msg;
-// 	struct sof_ipc_gdb_dsp_msg *msg;
-// 	sof_msg = sof_ipc_reply_find_msg(sdev->ipc, msg_id);
-// 	if (sof_msg)
-// 	{
-// 		msg = sof_msg->msg_data;
-// 		write_tty(msg);
-// 	}
-// }
+static void process_gdb(struct snd_sof_dev *sdev, u32 msg_id)
+{
+	struct sof_ipc_gdb_dsp_msg msg;
+	snd_sof_dsp_mailbox_read(sdev, 0, &msg, sizeof(msg));
+	write_tty(&msg);
+}
 
 /* DSP firmware has sent host a message */
 void snd_sof_ipc_msgs_rx(struct snd_sof_dev *sdev, u32 msg_id)
@@ -381,7 +376,7 @@ void snd_sof_ipc_msgs_rx(struct snd_sof_dev *sdev, u32 msg_id)
 		break;
 		/* TODO: other stream messages */
 	case SOF_IPC_GDB:
-		// process_gdb(sdev, msg_id);
+		process_gdb(sdev, msg_id);
 		break;
 	default:
 		dev_err(sdev->dev, "unknown DSP message 0x%x\n", cmd);
