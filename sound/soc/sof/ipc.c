@@ -134,8 +134,11 @@ static int tx_wait_done(struct snd_sof_ipc *ipc, struct snd_sof_ipc_msg *msg,
 	} else {
 		/* copy the data returned from DSP */
 		ret = snd_sof_dsp_rx_msg(sdev, msg);
-		if (ret == 0)
+		if (msg->reply_size)
 			memcpy(reply_data, msg->reply_data, msg->reply_size);
+		if (ret < 0)
+			dev_err(sdev->dev, "error: ipc error for 0x%x size 0x%x\n",
+				hdr->cmd, hdr->size);
 	}
 
 	/* return message body to empty list */
@@ -334,14 +337,53 @@ static void process_gdb(struct snd_sof_dev *sdev, u32 msg_id)
 	write_tty(&msg);
 }
 
+static void ipc_xrun(struct snd_sof_dev *sdev, u32 msg_id)
+{
+	struct snd_sof_pcm *spcm;
+	struct sof_ipc_stream_posn posn;
+
+	/* read back full message */
+	snd_sof_dsp_mailbox_read(sdev, 0, &posn, sizeof(posn));
+
+	spcm = snd_sof_find_spcm_comp(sdev, posn.comp_id);
+	if (spcm == NULL) {
+		dev_err(sdev->dev, "error: period elapsed for unknown component %d\n",
+			posn.comp_id);
+		return;
+	}
+
+	dev_dbg(sdev->dev,  "posn XRUN: host %llx comp %d size %d\n",
+		posn.host_posn, posn.xrun_comp_id, posn.xrun_size);
+
+	memcpy(&spcm->posn[0], &posn, sizeof(posn));
+	spcm->posn_valid[0] = true;
+	snd_pcm_stop_xrun(spcm->substream);
+}
+
+static void ipc_stream_message(struct snd_sof_dev *sdev, u32 msg_id)
+{
+	switch (msg_id) {
+	case SOF_IPC_STREAM_POSITION:
+		ipc_period_elapsed(sdev, msg_id);
+		break;
+	case SOF_IPC_STREAM_TRIG_XRUN:
+		ipc_xrun(sdev, msg_id);
+		break;
+	default:
+		dev_err(sdev->dev, "error: unhandled stream message %x\n",
+			msg_id);
+		break;
+	}
+}
+
 /* DSP firmware has sent host a message */
 void snd_sof_ipc_msgs_rx(struct snd_sof_dev *sdev, u32 msg_id)
 {
-	uint32_t cmd, reply;
+	uint32_t cmd, type;
 	int err = -EINVAL;
 
 	cmd = msg_id & SOF_GLB_TYPE_MASK;
-	reply = msg_id & SOF_CMD_TYPE_MASK;
+	type = msg_id & SOF_CMD_TYPE_MASK;
 
 	switch (cmd) {
 	case SOF_IPC_GLB_REPLY:
@@ -371,7 +413,7 @@ void snd_sof_ipc_msgs_rx(struct snd_sof_dev *sdev, u32 msg_id)
 	case SOF_IPC_GLB_COMP_MSG:
 		break;
 	case SOF_IPC_GLB_STREAM_MSG:
-		ipc_period_elapsed(sdev, msg_id);
+		ipc_stream_message(sdev, type);
 		break;
 	case SOF_IPC_GDB:
 		process_gdb(sdev, msg_id);
@@ -569,12 +611,6 @@ EXPORT_SYMBOL(snd_sof_ipc_get_mixer_chan);
 
 
 #if 0
-
-static void hsw_tx_data_copy(struct snd_sof_ipc_msg *msg, char *tx_data,
-	size_t tx_size)
-{
-	memcpy(msg->tx_data, tx_data, tx_size);
-}
 
 static u64 hsw_reply_msg_match(u64 header, u64 *mask)
 {

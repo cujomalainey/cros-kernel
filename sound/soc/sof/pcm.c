@@ -155,22 +155,43 @@ static int sof_pcm_hw_params(struct snd_pcm_substream *substream,
 	pcm.params.buffer.size = runtime->dma_bytes;
 	pcm.params.buffer.offset = 0;
 	pcm.params.direction = substream->stream;
-	pcm.params.sample_size = params_width(params) >> 3;
+	pcm.params.sample_valid_bytes = params_width(params) >> 3;
 	pcm.params.buffer_fmt = SOF_IPC_BUFFER_INTERLEAVED;
 	pcm.params.rate = params_rate(params);
 	pcm.params.channels = params_channels(params);
 	pcm.params.host_period_bytes = params_period_bytes(params);
 
+	/* container size */
 	switch (params_width(params)) {
 	case 16:
-		pcm.params.frame_fmt = SOF_IPC_FRAME_S16_LE;
+		pcm.params.sample_container_bytes = 2;
 		break;
 	case 24:
-		pcm.params.frame_fmt = SOF_IPC_FRAME_S24_4LE;
+		pcm.params.sample_container_bytes = 4;
 		break;
 	case 32:
+		pcm.params.sample_container_bytes = 4;
+		break;
+	default:
+		return -EINVAL;
+	}
+
+	/* format */
+	switch (params_format(params)) {
+	case SNDRV_PCM_FORMAT_S16:
+		pcm.params.frame_fmt = SOF_IPC_FRAME_S16_LE;
+		break;
+	case SNDRV_PCM_FORMAT_S24:
+		pcm.params.frame_fmt = SOF_IPC_FRAME_S24_4LE;
+		break;
+	case SNDRV_PCM_FORMAT_S32:
 		pcm.params.frame_fmt = SOF_IPC_FRAME_S32_LE;
 		break;
+	case SNDRV_PCM_FORMAT_FLOAT:
+		pcm.params.frame_fmt = SOF_IPC_FRAME_FLOAT;
+		break;
+	default:
+		return -EINVAL;
 	}
 
 	/* send IPC to the DSP */
@@ -350,6 +371,9 @@ static int sof_pcm_open(struct snd_pcm_substream *substream)
 
 	// TODO: create IPC to get this from DSP pipeline
 	//runtime->hw.fifo_size = hw->fifo_size;
+
+	/* set wait time - TODO: come from topology */
+	snd_pcm_wait_time(substream, 100);
 
 	spcm->posn_valid[substream->stream] = false;
 	spcm->substream = substream;

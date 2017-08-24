@@ -255,6 +255,7 @@ struct sof_ipc_dai_config {
 
 	/* physical protocol and clocking */
 	uint16_t format;	/* SOF_DAI_FMT_ */
+	uint16_t reserved;	/* alignment */
 	uint32_t mclk;	/* mclk frequency in Hz */
 	uint32_t bclk;	/* bclk frequency in Hz */
 	uint32_t fclk;	/* cclk frequency in Hz */
@@ -381,9 +382,11 @@ struct sof_ipc_stream_params {
 	enum sof_ipc_buffer_format buffer_fmt;
 	uint32_t rate;
 	uint32_t channels;
-	uint32_t sample_size;
+	uint32_t sample_valid_bytes;
+	uint32_t sample_container_bytes;
 	/* for notifying host period has completed - 0 means no period IRQ */
 	uint32_t host_period_bytes;
+	enum sof_ipc_chmap chmap[SOF_IPC_MAX_CHANNELS];	/* channel map */
 } __attribute__((packed));
 
 /* PCM params info - SOF_IPC_STREAM_PCM_PARAMS */
@@ -437,14 +440,17 @@ struct sof_ipc_stream {
 
 struct sof_ipc_stream_posn {
 	struct sof_ipc_reply rhdr;
-	uint32_t comp_id;
+	uint32_t comp_id;	/* host component ID */
 	uint32_t flags;		/* SOF_TIME_ */
 	uint32_t wallclock_hz;	/* frequency of wallclock in Hz */
 	uint32_t timestamp_ns;	/* resolution of timestamp in ns */
 	uint64_t host_posn;	/* host DMA position in bytes */
 	uint64_t dai_posn;	/* DAI DMA position in bytes */
+	uint64_t comp_posn;	/* comp position in bytes */
 	uint64_t wallclock;	/* audio wall clock */
 	uint64_t timestamp;	/* system time stamp */
+	uint32_t xrun_comp_id;	/* comp ID of XRUN component */
+	int32_t xrun_size;	/* XRUN size in bytes */
 }  __attribute__((packed));
 
 /*
@@ -492,6 +498,11 @@ enum sof_comp_type {
 	SOF_COMP_EQ_FIR,
 };
 
+/* XRUN action for component */
+#define SOF_XRUN_STOP		1 	/* stop stream */
+#define SOF_XRUN_UNDER_ZERO	2	/* send 0s to sink */
+#define SOF_XRUN_OVER_NULL	4	/* send data to NULL */
+
 /* create new generic component - SOF_IPC_TPLG_COMP_NEW */
 struct sof_ipc_comp {
 	struct sof_ipc_hdr hdr;
@@ -517,7 +528,7 @@ struct sof_ipc_comp_config {
 	uint32_t periods_source;	/* 0 means variable */
 	uint32_t preload_count;	/* how many periods to preload */
 	enum sof_ipc_frame frame_fmt;
-	enum sof_ipc_chmap chmap[SOF_IPC_MAX_CHANNELS];	/* channel map */
+	uint32_t xrun_action;
 } __attribute__((packed));
 
 /* generic host component */
@@ -664,6 +675,7 @@ struct sof_ipc_pipe_new {
 	uint32_t priority;	/* priority level 0 (low) to 10 (max) */
 	uint32_t mips;		/* worst case instruction count per period */
 	uint32_t frames_per_sched; /* output frames of pipeline, 0 is variable */
+	uint32_t xrun_limit_usecs; /* report xruns greater than limit */
 }  __attribute__((packed));
 
 /* pipeline construction complete - SOF_IPC_TPLG_PIPE_COMPLETE */
