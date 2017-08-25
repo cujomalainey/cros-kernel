@@ -220,6 +220,7 @@ static int sof_acpi_probe(struct platform_device *pdev)
 	sof_pdata->desc = (struct sof_dev_desc*) id->driver_data;
 	priv->sof_pdata = sof_pdata;
 	sof_pdata->pdev = pdev;
+	dev_set_drvdata(&pdev->dev, priv);
 
 	/* do we need to generate any machine plat data ? */ 
 	if (mach->new_mach_data)
