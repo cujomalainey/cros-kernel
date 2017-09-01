@@ -369,7 +369,7 @@ static void ipc_stream_message(struct snd_sof_dev *sdev, u32 msg_id)
 	}
 }
 
-static void process_gdb(struct snd_sof_dev *sdev, u32 msg_id)
+static void ipc_gdb_message(struct snd_sof_dev *sdev, u32 msg_id)
 {
 	struct sof_ipc_gdb_dsp_msg msg;
 	snd_sof_dsp_mailbox_read(sdev, 0, &msg, sizeof(msg));
@@ -415,7 +415,7 @@ void snd_sof_ipc_msgs_rx(struct snd_sof_dev *sdev, u32 msg_id)
 	case SOF_IPC_GLB_STREAM_MSG:
 		ipc_stream_message(sdev, type);
 	case SOF_IPC_GDB:
-		process_gdb(sdev, msg_id);
+		ipc_gdb_message(sdev, msg_id);
 		break;
 	default:
 		dev_err(sdev->dev, "unknown DSP message 0x%x\n", cmd);
